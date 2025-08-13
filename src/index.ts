@@ -1,11 +1,22 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import db from './config/db';
+import { UserRoute } from './routes';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.APP_PORT;
+
+// (async () => {
+//   try {
+//     await db.sync({ alter: true });
+//     console.log('Synced databases!');
+//   } catch (err) {
+//     console.error('Failed to sync DB:', err);
+//   }
+// })();
 
 app.use(
   cors({
@@ -14,6 +25,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(UserRoute);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello TypeScript + Express!');
