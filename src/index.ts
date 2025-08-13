@@ -2,7 +2,13 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import db from './config/db';
-import { UserRoute, AuthRoute } from './routes';
+import {
+  UserRoute,
+  AuthRoute,
+  DesaRoute,
+  KelompokRoute,
+  StudentRoute,
+} from './routes';
 
 dotenv.config();
 
@@ -27,6 +33,9 @@ app.use(
 app.use(express.json());
 app.use(AuthRoute);
 app.use(UserRoute);
+app.use(DesaRoute);
+app.use(KelompokRoute);
+app.use(StudentRoute);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello TypeScript + Express!');
