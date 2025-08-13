@@ -5,8 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --exec ts-node src/index.ts",
-    "prepare": "husky install",
-    "commit": "cz"
+    "prepare": "husky install"
   },
   "keywords": [],
   "author": "",
@@ -20,8 +19,6 @@
     "@commitlint/config-conventional": "^19.8.1",
     "@types/express": "^5.0.3",
     "@types/node": "^24.2.1",
-    "commitizen": "^4.3.1",
-    "cz-conventional-changelog": "^3.3.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.5",
     "nodemon": "^3.1.10",
@@ -33,10 +30,5 @@
     "*.{ts,js,json,css,md}": [
       "prettier --write"
     ]
-  },
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
   }
 }
