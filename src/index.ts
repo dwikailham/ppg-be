@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import db from './config/db';
-import { UserRoute } from './routes';
+import { UserRoute, AuthRoute } from './routes';
 
 dotenv.config();
 
@@ -25,6 +25,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(AuthRoute);
 app.use(UserRoute);
 
 app.get('/', (req: Request, res: Response) => {

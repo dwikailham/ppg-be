@@ -6,13 +6,14 @@ import {
   updateData,
   deleteData,
 } from '../controllers/Users';
+import { accessValidation } from '../middleware';
 
 const router = express.Router();
 
-router.get('/users', getList);
-router.get('/users/detail/:id', getById);
-router.post('/users', createData);
-router.patch('/users/update/:id', updateData);
-router.delete('/users/delete/:id', deleteData);
+router.get('/users', accessValidation, getList);
+router.get('/users/detail/:id', accessValidation, getById);
+router.post('/users', accessValidation, createData);
+router.patch('/users/update/:id', accessValidation, updateData);
+router.delete('/users/delete/:id', accessValidation, deleteData);
 
 export default router;
