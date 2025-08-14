@@ -2,6 +2,12 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/db';
 
+export interface DesaAttributes {
+  id?: number; // optional if auto-increment
+  name: string;
+  address: string;
+}
+
 class Desa extends Model {}
 
 Desa.init(

@@ -38,7 +38,8 @@ export const accessValidation = async (
     }
   } catch (err) {
     return res.status(401).json({
-      message: 'Unauthorized',
+      message: 'Unauthorized, Invalid token',
+      error: err,
     });
   }
 

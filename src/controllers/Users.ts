@@ -1,12 +1,15 @@
-import { UserModel } from '../models';
+import { UserModel, DesaModel, KelompokModel } from '../models';
 import argon2 from 'argon2';
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
+import sequelize from '../config/db';
 
 type UserBody = {
   name: string;
   username: string;
   password: string;
+  desaIds: Array<number>;
+  kelompokIds: Array<number>;
 };
 
 export const getList = async (req: Request, res: Response) => {
@@ -71,19 +74,43 @@ export const createData = async (
   req: Request<{}, {}, UserBody>,
   res: Response
 ) => {
-  const { name, username, password } = req.body;
+  const t = await sequelize.transaction();
+  const { name, username, password, desaIds, kelompokIds } = req.body;
+  if (!desaIds || desaIds.length === 0) {
+    return res.status(400).json({ message: 'DESA IS REQUIRED' });
+  }
+
+  if (!kelompokIds || kelompokIds.length === 0) {
+    return res.status(400).json({ message: 'KELOMPOK IS REQUIRED' });
+  }
   try {
     const existingUser = await UserModel.findOne({ where: { username } });
     if (existingUser) {
       return res.status(400).json({ message: 'Username already exists' });
     }
     const hashPassword = await argon2.hash(password);
-    UserModel.create({
+    const user = await UserModel.create({
       name,
       username,
       password: hashPassword,
       is_active: true,
     });
+
+    // 3. Mapping desa (jika ada)
+    if (desaIds && Array.isArray(desaIds) && desaIds.length > 0) {
+      const desas = await DesaModel.findAll({ where: { id: desaIds } });
+      await (user as any).addDesas(desas, { transaction: t }); // ADD (tidak overwrite)
+    }
+
+    // 4. Mapping kelompok (jika ada)
+    if (kelompokIds && Array.isArray(kelompokIds) && kelompokIds.length > 0) {
+      const kelompoks = await KelompokModel.findAll({
+        where: { id: kelompokIds },
+      });
+      await (user as any).addKelompoks(kelompoks, { transaction: t });
+    }
+
+    await t.commit();
 
     res.status(201).json({ message: 'Registered!' });
   } catch (err: any) {
@@ -100,7 +127,15 @@ export const updateData = async (req: Request, res: Response) => {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  const { password, is_active } = req.body;
+  const { password, is_active, kelompokIds, desaIds } = req.body;
+
+  if (!desaIds || desaIds.length === 0) {
+    return res.status(400).json({ message: 'DESA IS REQUIRED' });
+  }
+
+  if (!kelompokIds || kelompokIds.length === 0) {
+    return res.status(400).json({ message: 'KELOMPOK IS REQUIRED' });
+  }
 
   let hashPassword;
   if (password === '' || password === null || !password) {
@@ -120,6 +155,15 @@ export const updateData = async (req: Request, res: Response) => {
         },
       }
     );
+
+    if (Array.isArray(desaIds)) {
+      await (user as any).setDesas(desaIds); // ini akan hapus mapping lama dan isi baru
+    }
+
+    // Update mapping kelompok (replace lama)
+    if (Array.isArray(kelompokIds)) {
+      await (user as any).setKelompoks(kelompokIds);
+    }
 
     res.status(200).json({ message: 'User success updated!' });
   } catch (err: any) {
