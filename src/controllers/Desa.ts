@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
 import { DesaModel } from '../models/index';
 
+type DesaBody = {
+  name: string;
+  address: string;
+};
+
 export const getAllDesa = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
@@ -36,22 +41,44 @@ export const getDesaById = async (req: Request, res: Response) => {
   }
 };
 
-export const createDesa = async (req: Request, res: Response) => {
+export const createDesa = async (
+  req: Request<{}, {}, DesaBody>,
+  res: Response
+) => {
   try {
-    const desa = await DesaModel.create({ name: req.body.name });
-    res.status(201).json(desa);
+    const { name, address } = req.body;
+    if (!name || !address) {
+      return res.status(400).json({ message: 'BAD REQUEST' });
+    }
+
+    const existingDesa = await DesaModel.findOne({ where: { name } });
+    if (existingDesa) {
+      return res.status(400).json({ message: 'Nama desa sudah digunakan' });
+    }
+
+    await DesaModel.create({ name, address });
+    res.status(201).json({ message: 'Desa berhasil dibuat' });
   } catch (error) {
     res.status(500).json({ message: 'INTERNAL SERVER ERROR', error });
   }
 };
 
 export const updateDesa = async (req: Request, res: Response) => {
+  const { name, address } = req.body;
+  if (!name || !address) {
+    return res.status(400).json({ message: 'BAD REQUEST' });
+  }
+
+  const existingDesa = await DesaModel.findOne({ where: { name } });
+  if (existingDesa) {
+    return res.status(400).json({ message: 'Nama desa sudah digunakan' });
+  }
   try {
     const desa = await DesaModel.findByPk(req.params.id);
     if (!desa) return res.status(404).json({ message: 'Desa tidak ditemukan' });
 
     await desa.update({ name: req.body.name });
-    res.json(desa);
+    res.status(200).json({ message: 'Desa berhasil diperbarui' });
   } catch (error) {
     res.status(500).json({ message: 'INTERNAL SERVER ERROR', error });
   }
@@ -63,7 +90,7 @@ export const deleteDesa = async (req: Request, res: Response) => {
     if (!desa) return res.status(404).json({ message: 'Desa tidak ditemukan' });
 
     await desa.destroy();
-    res.json({ message: 'Desa berhasil dihapus' });
+    res.status(200).json({ message: 'Desa berhasil dihapus' });
   } catch (error) {
     res.status(500).json({ message: 'INTERNAL SERVER ERROR', error });
   }
