@@ -1,6 +1,15 @@
 import { Request, Response } from 'express';
 import { StudentModel, KelompokModel, DesaModel } from '../models/index';
 
+type StudentBody = {
+  name: string;
+  kelompok_id: number;
+  gender: string;
+  birth_date: string;
+  phone: string;
+  address: string;
+};
+
 export const getAllStudents = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1; // default halaman 1
@@ -52,39 +61,60 @@ export const getStudentById = async (req: Request, res: Response) => {
   }
 };
 
-export const createStudent = async (req: Request, res: Response) => {
+export const createStudent = async (
+  req: Request<{}, {}, StudentBody>,
+  res: Response
+) => {
+  const { address, birth_date, gender, kelompok_id, name, phone } = req.body;
+  if (!name || !kelompok_id) {
+    return res.status(400).json({ message: 'BAD REQUEST' });
+  }
+
+  const existingKelompok = await KelompokModel.findByPk(kelompok_id);
+  if (!existingKelompok) {
+    return res.status(400).json({ message: 'Kelompok tidak ditemukan' });
+  }
+
   try {
-    const student = await StudentModel.create({
-      kelompok_id: req.body.kelompok_id,
-      name: req.body.name,
-      gender: req.body.gender,
-      birth_date: req.body.birth_date,
-      phone: req.body.phone,
-      address: req.body.address,
-      join_date: req.body.join_date,
+    await StudentModel.create({
+      address,
+      birth_date,
+      gender,
+      kelompok_id,
+      name,
+      phone,
     });
-    res.status(201).json(student);
+    res.status(201).json({ message: 'Student berhasil dibuat' });
   } catch (error) {
     res.status(500).json({ message: 'INTERNAL SERVER ERROR', error });
   }
 };
 
 export const updateStudent = async (req: Request, res: Response) => {
+  const { address, birth_date, gender, kelompok_id, name, phone } = req.body;
+  if (!name || !kelompok_id) {
+    return res.status(400).json({ message: 'BAD REQUEST' });
+  }
+
+  const existingKelompok = await KelompokModel.findByPk(kelompok_id);
+  if (!existingKelompok) {
+    return res.status(400).json({ message: 'Kelompok tidak ditemukan' });
+  }
+
   try {
     const student = await StudentModel.findByPk(req.params.id);
     if (!student)
       return res.status(404).json({ message: 'Student tidak ditemukan' });
 
     await student.update({
-      kelompok_id: req.body.kelompok_id,
-      name: req.body.name,
-      gender: req.body.gender,
-      birth_date: req.body.birth_date,
-      phone: req.body.phone,
-      address: req.body.address,
-      join_date: req.body.join_date,
+      address,
+      birth_date,
+      gender,
+      kelompok_id,
+      name,
+      phone,
     });
-    res.json(student);
+    res.status(200).json({ message: 'Student berhasil diperbarui' });
   } catch (error) {
     res.status(500).json({ message: 'INTERNAL SERVER ERROR', error });
   }
