@@ -36,11 +36,19 @@ export const Login = async (req: Request, res: Response) => {
   if (!user.is_active) {
     return res.status(400).json({ message: 'User In Active' });
   }
+
+  // Convert instance Sequelize → plain object
+  const plainUser = user.get({ plain: true }) as UserWithRelations;
   const data = {
     name: user.name,
     username: user.username,
     id: user.id,
+    desas: plainUser.Desas?.length ? plainUser?.Desas.map((el) => el.id) : [],
+    kelompoks: plainUser.Kelompoks?.length
+      ? plainUser?.Kelompoks.map((el) => el.id)
+      : [],
   };
+
   const JWT_SECRET = process.env.JWT_SECRET!;
 
   const token = jwt.sign(data, JWT_SECRET);

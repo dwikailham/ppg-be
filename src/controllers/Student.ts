@@ -16,12 +16,21 @@ export const getAllStudents = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 10; // default 10 data
     const offset = (page - 1) * limit;
 
+    const { desas, kelompoks } = (req as any).user_data;
+
     const { count, rows } = await StudentModel.findAndCountAll({
       include: [
         {
           model: KelompokModel,
           attributes: ['id', 'name'],
-          include: [{ model: DesaModel, attributes: ['id', 'name'] }],
+          where: { id: kelompoks },
+          include: [
+            {
+              model: DesaModel,
+              attributes: ['id', 'name'],
+              where: { id: desas },
+            },
+          ],
         },
       ],
       limit,
