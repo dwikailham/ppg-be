@@ -13,11 +13,21 @@ export const getAllKelompok = async (req: Request, res: Response) => {
       include: [{ model: DesaModel, attributes: ['id', 'name'] }],
       limit,
       offset,
+      attributes: { exclude: ['created_at', 'updated_at', 'desa_id'] },
       order: [['created_at', 'DESC']],
     });
 
+    const result = rows.map((kelompok) => ({
+      id: kelompok.id,
+      name: kelompok.name,
+      address: kelompok.address,
+      desa: kelompok.Desa
+        ? { id: kelompok.Desa.id, name: kelompok.Desa.name }
+        : null,
+    }));
+
     res.json({
-      data: rows,
+      data: result,
       pagination: {
         total: count,
         totalPages: Math.ceil(count / limit),
