@@ -1,9 +1,35 @@
 // models/student.model.ts
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/db';
 import { KelompokModel } from './index';
+export interface StudentAttributes {
+  id?: number; // optional if auto-increment
+  kelompok_id: number;
+  name: string;
+  address: string;
+  gender: string;
+  birth_date: string;
+  phone: string;
+  Kelompok?: { id: number; name: string; Desa: { id: number; name: string } };
+}
 
-class Student extends Model {}
+interface StudentCreationAttributes extends Optional<StudentAttributes, 'id'> {}
+
+class Student
+  extends Model<StudentAttributes, StudentCreationAttributes>
+  implements StudentAttributes
+{
+  public id!: number;
+  public name!: string;
+  public kelompok_id!: number;
+  public address!: string;
+  public gender!: string;
+  public birth_date!: string;
+  public phone!: string;
+  public Kelompok?:
+    | { id: number; name: string; Desa: { id: number; name: string } }
+    | undefined;
+}
 
 Student.init(
   {

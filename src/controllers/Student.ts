@@ -26,11 +26,25 @@ export const getAllStudents = async (req: Request, res: Response) => {
       ],
       limit,
       offset,
+      attributes: { exclude: ['created_at', 'updated_at', 'kelompok_id'] },
       order: [['created_at', 'DESC']],
     });
 
+    const result = rows.map((el) => ({
+      id: el.id,
+      name: el.name,
+      address: el.address,
+      gender: el.gender,
+      birth_date: el.birth_date,
+      phone: el.phone,
+      desa: el?.Kelompok ? el.Kelompok.Desa : null,
+      kelompok: el?.Kelompok
+        ? { id: el.Kelompok.id, name: el.Kelompok.name }
+        : null,
+    }));
+
     res.json({
-      data: rows,
+      data: result,
       pagination: {
         total: count,
         totalPages: Math.ceil(count / limit),
