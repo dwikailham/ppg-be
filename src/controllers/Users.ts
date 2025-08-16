@@ -38,11 +38,10 @@ export const getList = async (req: Request, res: Response) => {
     const totalPages = Math.ceil(count / limit);
     res.status(200).json({
       data: rows,
-      meta: {
-        totalItems: count,
+      pagination: {
+        total: count,
         totalPages,
         currentPage: page,
-        pageSize: limit,
       },
     });
   } catch (err: any) {
