@@ -4,6 +4,8 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import sequelize from '../config/db';
 import { sendError, sendSuccess } from '../utils/commons';
+import { UserAttributes } from '../models/User';
+import { DesaAttributes } from '../models/Desa';
 
 type UserBody = {
   name: string;
@@ -11,6 +13,11 @@ type UserBody = {
   password: string;
   desaIds: Array<number>;
   kelompokIds: Array<number>;
+};
+
+type UserWithRelations = UserAttributes & {
+  Desas?: DesaAttributes[];
+  Kelompoks?: DesaAttributes[];
 };
 
 export const getList = async (req: Request, res: Response) => {
@@ -79,20 +86,36 @@ export const getList = async (req: Request, res: Response) => {
 };
 
 export const getById = async (req: Request<{ id: string }>, res: Response) => {
-  const user = await UserModel.findOne({
-    where: { id: req.params.id },
+  const userId = parseInt(req.params.id, 10);
+  const users = await UserModel.findOne({
+    where: { id: userId },
+    attributes: ['id', 'username', 'name', 'is_active'],
+    include: [
+      { model: DesaModel, through: { attributes: [] } },
+      { model: KelompokModel, through: { attributes: [] } },
+    ],
   });
 
-  if (!user) {
+  if (!users) {
     return sendError(res, 400, 'User not exists');
   }
 
   try {
-    const response = await UserModel.findOne({
-      where: { id: req.params.id },
-      attributes: ['id', 'username', 'name', 'is_active'],
-    });
-    res.status(200).json(response);
+    const plainUser = (users?.get({ plain: true }) as UserWithRelations) || {};
+    const data = {
+      name: plainUser.name,
+      username: plainUser.username,
+      id: plainUser.id,
+      is_active: plainUser.is_active,
+      desas: plainUser.Desas?.length
+        ? plainUser?.Desas.map((el) => ({ id: el.id, name: el.name }))
+        : [],
+      kelompoks: plainUser.Kelompoks?.length
+        ? plainUser?.Kelompoks.map((el) => ({ id: el.id, name: el.name }))
+        : [],
+    };
+
+    sendSuccess(res, data, 'Success get user data');
   } catch (err: any) {
     sendError(res, 500, 'INTERNAL SERVER ERROR', err);
   }
