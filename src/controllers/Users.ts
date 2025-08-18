@@ -3,6 +3,7 @@ import argon2 from 'argon2';
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import sequelize from '../config/db';
+import { sendError, sendSuccess } from '../utils/commons';
 
 type UserBody = {
   name: string;
@@ -33,11 +34,39 @@ export const getList = async (req: Request, res: Response) => {
       limit,
       offset,
       order: [['created_at', 'DESC']],
-      attributes: ['id', 'username', 'name', 'is_active'],
+      attributes: ['id', 'username', 'name', 'is_active', 'created_at'],
+      include: [
+        {
+          model: DesaModel,
+          as: 'Desas',
+          attributes: ['id', 'name'],
+          through: { attributes: [] }, // jangan tampilkan tabel pivot
+        },
+        {
+          model: KelompokModel,
+          as: 'Kelompoks',
+          attributes: ['id', 'name'],
+          through: { attributes: [] },
+        },
+      ],
+      distinct: true, // untuk menghitung jumlah unik
     });
+
+    const data = rows.map((user) => {
+      const plain = user.get({ plain: true }) as any;
+      return {
+        id: plain.id,
+        username: plain.username,
+        name: plain.name,
+        is_active: plain.is_active,
+        desas: plain.Desas || [],
+        kelompoks: plain.Kelompoks || [],
+      };
+    });
+
     const totalPages = Math.ceil(count / limit);
     res.status(200).json({
-      data: rows,
+      data,
       pagination: {
         total: count,
         totalPages,
@@ -45,7 +74,7 @@ export const getList = async (req: Request, res: Response) => {
       },
     });
   } catch (err: any) {
-    res.status(500).json({ message: 'INTERNAL SERVER ERROR' });
+    sendError(res, 500, 'INTERNAL SERVER ERROR', err);
   }
 };
 
@@ -55,7 +84,7 @@ export const getById = async (req: Request<{ id: string }>, res: Response) => {
   });
 
   if (!user) {
-    return res.status(400).json({ message: 'User not exists' });
+    return sendError(res, 400, 'User not exists');
   }
 
   try {
@@ -65,7 +94,7 @@ export const getById = async (req: Request<{ id: string }>, res: Response) => {
     });
     res.status(200).json(response);
   } catch (err: any) {
-    res.status(500).json({ message: 'INTERNAL SERVER ERROR' });
+    sendError(res, 500, 'INTERNAL SERVER ERROR', err);
   }
 };
 
@@ -76,16 +105,16 @@ export const createData = async (
   const t = await sequelize.transaction();
   const { name, username, password, desaIds, kelompokIds } = req.body;
   if (!desaIds || desaIds.length === 0) {
-    return res.status(400).json({ message: 'DESA IS REQUIRED' });
+    return sendError(res, 400, 'DESA IS REQUIRED');
   }
 
   if (!kelompokIds || kelompokIds.length === 0) {
-    return res.status(400).json({ message: 'KELOMPOK IS REQUIRED' });
+    return sendError(res, 400, 'KELOMPOK IS REQUIRED');
   }
   try {
     const existingUser = await UserModel.findOne({ where: { username } });
     if (existingUser) {
-      return res.status(400).json({ message: 'Username already exists' });
+      return sendError(res, 400, 'Username already exists');
     }
     const hashPassword = await argon2.hash(password);
     const user = await UserModel.create({
@@ -113,7 +142,7 @@ export const createData = async (
 
     res.status(201).json({ message: 'Registered!' });
   } catch (err: any) {
-    res.status(500).json({ message: 'INTERNAL SERVER ERROR' });
+    sendError(res, 500, 'INTERNAL SERVER ERROR', err);
   }
 };
 
@@ -166,8 +195,7 @@ export const updateData = async (req: Request, res: Response) => {
 
     res.status(200).json({ message: 'User success updated!' });
   } catch (err: any) {
-    console.error(err);
-    res.status(500).json({ message: 'INTERNAL SERVER ERROR' });
+    sendError(res, 500, 'INTERNAL SERVER ERROR', err);
   }
 };
 
@@ -189,6 +217,6 @@ export const deleteData = async (req: Request, res: Response) => {
 
     res.status(200).json({ message: 'User success deleted!' });
   } catch (err: any) {
-    res.status(500).json({ message: 'INTERNAL SERVER ERROR' });
+    sendError(res, 500, 'INTERNAL SERVER ERROR', err);
   }
 };
