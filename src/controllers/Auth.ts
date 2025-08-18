@@ -82,8 +82,12 @@ export const getMe = async (req: Request, res: Response) => {
     // Rename key menjadi snake_case
     const result = {
       ...plainUser,
-      desas: plainUser.Desas || [],
-      kelompoks: plainUser.Kelompoks || [],
+      desas: plainUser.Desas?.length
+        ? plainUser?.Desas.map((el) => ({ id: el.id, name: el.name }))
+        : [],
+      kelompoks: plainUser.Kelompoks?.length
+        ? plainUser?.Kelompoks.map((el) => ({ id: el.id, name: el.name }))
+        : [],
     };
 
     // Hapus key lama (camelCase model name)
