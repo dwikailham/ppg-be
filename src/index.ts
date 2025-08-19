@@ -8,6 +8,9 @@ import {
   DesaRoute,
   KelompokRoute,
   StudentRoute,
+  PermissionRoute,
+  RoleRoute,
+  ScopeRoute,
 } from './routes';
 
 dotenv.config();
@@ -36,6 +39,9 @@ app.use(UserRoute);
 app.use(DesaRoute);
 app.use(KelompokRoute);
 app.use(StudentRoute);
+app.use(PermissionRoute);
+app.use(RoleRoute);
+app.use(ScopeRoute);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello TypeScript + Express!');
