@@ -15,14 +15,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.APP_PORT;
 
-// (async () => {
-//   try {
-//     await db.sync({ alter: true });
-//     console.log('Synced databases!');
-//   } catch (err) {
-//     console.error('Failed to sync DB:', err);
-//   }
-// })();
+db.authenticate()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Tidak dapat terkoneksi dengan database');
+  });
 
 app.use(
   cors({
@@ -39,8 +40,4 @@ app.use(StudentRoute);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello TypeScript + Express!');
-});
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
