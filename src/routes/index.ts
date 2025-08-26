@@ -3,3 +3,6 @@ export { default as AuthRoute } from './Auth';
 export { default as DesaRoute } from './Desa';
 export { default as KelompokRoute } from './Kelompok';
 export { default as StudentRoute } from './Student';
+export { default as PermissionRoute } from './Permission';
+export { default as RoleRoute } from './Role';
+export { default as ScopeRoute } from './Scope';

@@ -7,6 +7,7 @@ export interface UserAttributes {
   username: string;
   password: string;
   is_active: boolean;
+  roles?: Array<{ id: number }>;
 }
 
 interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {}

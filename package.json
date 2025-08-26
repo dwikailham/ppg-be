@@ -5,6 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --exec ts-node src/index.ts",
+    "migrate": "ts-node src/utils/migrate.ts",
     "prepare": "husky install"
   },
   "keywords": [],
@@ -39,5 +40,6 @@
     "*.{ts,js,json,css,md}": [
       "prettier --write"
     ]
-  }
+  },
+  "packageManager": "yarn@4.9.2+sha512.1fc009bc09d13cfd0e19efa44cbfc2b9cf6ca61482725eb35bbc5e257e093ebf4130db6dfe15d604ff4b79efd8e1e8e99b25fa7d0a6197c9f9826358d4d65c3c"
 }

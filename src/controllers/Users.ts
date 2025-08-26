@@ -1,23 +1,16 @@
-import { UserModel, DesaModel, KelompokModel } from '../models';
+import { UserModel } from '../models';
 import argon2 from 'argon2';
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import sequelize from '../config/db';
+import { Role } from '../models/Role';
 import { sendError, sendSuccess } from '../utils/commons';
-import { UserAttributes } from '../models/User';
-import { DesaAttributes } from '../models/Desa';
 
 type UserBody = {
   name: string;
   username: string;
   password: string;
-  desaIds: Array<number>;
-  kelompokIds: Array<number>;
-};
-
-type UserWithRelations = UserAttributes & {
-  Desas?: DesaAttributes[];
-  Kelompoks?: DesaAttributes[];
+  roleIds: Array<number>;
 };
 
 export const getList = async (req: Request, res: Response) => {
@@ -42,38 +35,20 @@ export const getList = async (req: Request, res: Response) => {
       offset,
       order: [['created_at', 'DESC']],
       attributes: ['id', 'username', 'name', 'is_active', 'created_at'],
+      distinct: true,
       include: [
         {
-          model: DesaModel,
-          as: 'Desas',
-          attributes: ['id', 'name'],
-          through: { attributes: [] }, // jangan tampilkan tabel pivot
-        },
-        {
-          model: KelompokModel,
-          as: 'Kelompoks',
-          attributes: ['id', 'name'],
+          model: Role,
+          as: 'roles',
+          attributes: ['id', 'role_name'],
           through: { attributes: [] },
         },
       ],
-      distinct: true, // untuk menghitung jumlah unik
-    });
-
-    const data = rows.map((user) => {
-      const plain = user.get({ plain: true }) as any;
-      return {
-        id: plain.id,
-        username: plain.username,
-        name: plain.name,
-        is_active: plain.is_active,
-        desas: plain.Desas || [],
-        kelompoks: plain.Kelompoks || [],
-      };
     });
 
     const totalPages = Math.ceil(count / limit);
     res.status(200).json({
-      data,
+      data: rows,
       pagination: {
         total: count,
         totalPages,
@@ -86,13 +61,17 @@ export const getList = async (req: Request, res: Response) => {
 };
 
 export const getById = async (req: Request<{ id: string }>, res: Response) => {
-  const userId = parseInt(req.params.id, 10);
+  const userId = parseInt(req.params.id, 0);
   const users = await UserModel.findOne({
     where: { id: userId },
     attributes: ['id', 'username', 'name', 'is_active'],
     include: [
-      { model: DesaModel, through: { attributes: [] } },
-      { model: KelompokModel, through: { attributes: [] } },
+      {
+        model: Role,
+        as: 'roles',
+        attributes: ['id', 'role_name'],
+        through: { attributes: [] },
+      },
     ],
   });
 
@@ -101,21 +80,7 @@ export const getById = async (req: Request<{ id: string }>, res: Response) => {
   }
 
   try {
-    const plainUser = (users?.get({ plain: true }) as UserWithRelations) || {};
-    const data = {
-      name: plainUser.name,
-      username: plainUser.username,
-      id: plainUser.id,
-      is_active: plainUser.is_active,
-      desas: plainUser.Desas?.length
-        ? plainUser?.Desas.map((el) => ({ id: el.id, name: el.name }))
-        : [],
-      kelompoks: plainUser.Kelompoks?.length
-        ? plainUser?.Kelompoks.map((el) => ({ id: el.id, name: el.name }))
-        : [],
-    };
-
-    sendSuccess(res, data, 'Success get user data');
+    sendSuccess(res, users, 'Success get user data');
   } catch (err: any) {
     sendError(res, 500, 'INTERNAL SERVER ERROR', err);
   }
@@ -126,14 +91,12 @@ export const createData = async (
   res: Response
 ) => {
   const t = await sequelize.transaction();
-  const { name, username, password, desaIds, kelompokIds } = req.body;
-  if (!desaIds || desaIds.length === 0) {
-    return sendError(res, 400, 'DESA IS REQUIRED');
+  const { name, username, password, roleIds } = req.body;
+
+  if (!name || !username || !roleIds || roleIds?.length === 0) {
+    return sendError(res, 400, 'BAD REQUEST');
   }
 
-  if (!kelompokIds || kelompokIds.length === 0) {
-    return sendError(res, 400, 'KELOMPOK IS REQUIRED');
-  }
   try {
     const existingUser = await UserModel.findOne({ where: { username } });
     if (existingUser) {
@@ -147,18 +110,9 @@ export const createData = async (
       is_active: true,
     });
 
-    // 3. Mapping desa (jika ada)
-    if (desaIds && Array.isArray(desaIds) && desaIds.length > 0) {
-      const desas = await DesaModel.findAll({ where: { id: desaIds } });
-      await (user as any).addDesas(desas, { transaction: t }); // ADD (tidak overwrite)
-    }
-
-    // 4. Mapping kelompok (jika ada)
-    if (kelompokIds && Array.isArray(kelompokIds) && kelompokIds.length > 0) {
-      const kelompoks = await KelompokModel.findAll({
-        where: { id: kelompokIds },
-      });
-      await (user as any).addKelompoks(kelompoks, { transaction: t });
+    if (roleIds && roleIds.length > 0) {
+      const roles = await Role.findAll({ where: { id: roleIds } });
+      await (user as any).addRoles(roles, { transaction: t });
     }
 
     await t.commit();
@@ -170,22 +124,22 @@ export const createData = async (
 };
 
 export const updateData = async (req: Request, res: Response) => {
+  const user_id = parseInt(req.params.id, 0);
+  if (isNaN(user_id)) {
+    return res.status(400).json({ message: 'Invalid user ID' });
+  }
   const user = await UserModel.findOne({
-    where: { id: req.params.id },
+    where: { id: user_id },
   });
 
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  const { password, is_active, kelompokIds, desaIds } = req.body;
+  const { password, is_active, roleIds } = req.body;
 
-  if (!desaIds || desaIds.length === 0) {
-    return res.status(400).json({ message: 'DESA IS REQUIRED' });
-  }
-
-  if (!kelompokIds || kelompokIds.length === 0) {
-    return res.status(400).json({ message: 'KELOMPOK IS REQUIRED' });
+  if (!roleIds || roleIds?.length === 0) {
+    return sendError(res, 400, 'BAD REQUEST');
   }
 
   let hashPassword;
@@ -194,6 +148,8 @@ export const updateData = async (req: Request, res: Response) => {
   } else {
     hashPassword = await argon2.hash(password);
   }
+
+  const t = await sequelize.transaction();
 
   try {
     UserModel.update(
@@ -206,15 +162,12 @@ export const updateData = async (req: Request, res: Response) => {
         },
       }
     );
-
-    if (Array.isArray(desaIds)) {
-      await (user as any).setDesas(desaIds); // ini akan hapus mapping lama dan isi baru
+    if (roleIds && roleIds.length > 0) {
+      const roles = await Role.findAll({ where: { id: roleIds } });
+      await (user as any).setRoles(roles, { transaction: t });
     }
 
-    // Update mapping kelompok (replace lama)
-    if (Array.isArray(kelompokIds)) {
-      await (user as any).setKelompoks(kelompokIds);
-    }
+    await t.commit();
 
     res.status(200).json({ message: 'User success updated!' });
   } catch (err: any) {

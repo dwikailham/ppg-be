@@ -45,3 +45,23 @@ export const accessValidation = async (
 
   next();
 };
+
+export const roleMiddleware = (allowedRoles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const validationRequest = req as ValidationRequest;
+    if (!validationRequest.user_data)
+      return res.status(401).json({ message: 'Unauthorized' });
+
+    const userRoles =
+      validationRequest.user_data.roles?.map((r: any) => r.role_name) || [];
+
+    const hasRole = userRoles.some((role: string) =>
+      allowedRoles.includes(role)
+    );
+    if (!hasRole) {
+      return res.status(403).json({ message: 'Forbidden: insufficient role' });
+    }
+
+    next();
+  };
+};
