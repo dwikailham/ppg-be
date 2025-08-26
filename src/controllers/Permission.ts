@@ -17,7 +17,7 @@ export const getPermissions = async (req: Request, res: Response) => {
       order: [['createdAt', 'DESC']],
     });
 
-    res.json({
+    res.status(200).json({
       data: rows,
       pagination: {
         total: count,

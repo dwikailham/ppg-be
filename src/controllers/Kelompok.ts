@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { KelompokModel, DesaModel } from '../models/index';
+import { sendError } from '../utils/commons';
 
 type KelompokBody = { name: string; desa_id: number; address: string };
 
@@ -26,7 +27,7 @@ export const getAllKelompok = async (req: Request, res: Response) => {
         : null,
     }));
 
-    res.json({
+    res.status(200).json({
       data: result,
       pagination: {
         total: count,
@@ -35,7 +36,7 @@ export const getAllKelompok = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: 'INTERNAL SERVER ERROR', error });
+    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
   }
 };
 
@@ -44,11 +45,10 @@ export const getKelompokById = async (req: Request, res: Response) => {
     const kelompok = await KelompokModel.findByPk(req.params.id, {
       include: [{ model: DesaModel, attributes: ['id', 'name'] }],
     });
-    if (!kelompok)
-      return res.status(404).json({ message: 'Kelompok tidak ditemukan' });
-    res.json(kelompok);
+    if (!kelompok) return sendError(res, 404, 'Kelompok tidak ditemukan');
+    res.status(200).json(kelompok);
   } catch (error) {
-    res.status(500).json({ message: 'INTERNAL SERVER ERROR', error });
+    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
   }
 };
 
@@ -58,17 +58,17 @@ export const createKelompok = async (
 ) => {
   const { name, desa_id, address } = req.body;
   if (!name || !desa_id) {
-    return res.status(400).json({ message: 'BAD REQUEST' });
+    return sendError(res, 400, 'BAD REQUEST');
   }
 
   const existingKelompok = await KelompokModel.findOne({ where: { name } });
   if (existingKelompok) {
-    return res.status(400).json({ message: 'Nama kelompok sudah digunakan' });
+    return sendError(res, 400, 'Nama sudah digunakan');
   }
 
   const desa = await DesaModel.findByPk(desa_id);
   if (!desa) {
-    return res.status(400).json({ message: 'Desa tidak ditemukan' });
+    return sendError(res, 400, 'Desa Tidak Ditemukan');
   }
 
   try {
@@ -86,22 +86,21 @@ export const createKelompok = async (
 export const updateKelompok = async (req: Request, res: Response) => {
   const { name, desa_id, address } = req.body;
   if (!name || !desa_id) {
-    return res.status(400).json({ message: 'BAD REQUEST' });
+    return sendError(res, 400, 'BAD REQUEST');
   }
 
   const existingKelompok = await KelompokModel.findOne({ where: { name } });
   if (existingKelompok) {
-    return res.status(400).json({ message: 'Nama kelompok sudah digunakan' });
+    return sendError(res, 400, 'Nama sudah digunakan');
   }
 
   const desa = await DesaModel.findByPk(desa_id);
   if (!desa) {
-    return res.status(400).json({ message: 'Desa tidak ditemukan' });
+    return sendError(res, 400, 'Desa Tidak Ditemukan');
   }
   try {
     const kelompok = await KelompokModel.findByPk(req.params.id);
-    if (!kelompok)
-      return res.status(404).json({ message: 'Kelompok tidak ditemukan' });
+    if (!kelompok) return sendError(res, 404, 'Kelompok tidak ditemukan');
 
     await kelompok.update({
       desa_id,
@@ -110,19 +109,18 @@ export const updateKelompok = async (req: Request, res: Response) => {
     });
     res.status(200).json({ message: 'Kelompok berhasil diperbarui' });
   } catch (error) {
-    res.status(500).json({ message: 'INTERNAL SERVER ERROR', error });
+    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
   }
 };
 
 export const deleteKelompok = async (req: Request, res: Response) => {
   try {
     const kelompok = await KelompokModel.findByPk(req.params.id);
-    if (!kelompok)
-      return res.status(404).json({ message: 'Kelompok tidak ditemukan' });
+    if (!kelompok) return sendError(res, 404, 'Kelompok tidak ditemukan');
 
     await kelompok.destroy();
     res.json({ message: 'Kelompok berhasil dihapus' });
   } catch (error) {
-    res.status(500).json({ message: 'INTERNAL SERVER ERROR', error });
+    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
   }
 };

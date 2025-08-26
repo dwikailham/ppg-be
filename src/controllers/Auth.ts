@@ -8,7 +8,6 @@ import {
   KelompokModel,
 } from '../models';
 import argon2 from 'argon2';
-import { DesaAttributes } from '../models/Desa';
 import { UserAttributes } from '../models/User';
 import { sendError } from '../utils/commons';
 

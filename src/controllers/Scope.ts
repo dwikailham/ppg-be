@@ -68,5 +68,5 @@ export const addUserScope = async (req: Request, res: Response) => {
 export const deleteUserScope = async (req: Request, res: Response) => {
   const { scopeId } = req.params;
   await UserScope.destroy({ where: { id: scopeId } });
-  res.json({ message: 'Scope removed' });
+  sendSuccess(res, 'Scope successfully deleted');
 };

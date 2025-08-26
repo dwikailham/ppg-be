@@ -42,11 +42,6 @@ export const createRole = async (req: Request, res: Response) => {
       await (role as any).addPermissions(permissionIds); // karena belongsToMany
     }
 
-    // 3. ambil ulang data role + permission yang sudah di-assign
-    // const result = await Role.findByPk(role.id, {
-    //   include: [Permission],
-    // });
-
     res.status(201).json({ message: 'Data berhasil dibuat' });
   } catch (error) {
     res.status(500).json({ message: 'Error creating role', error });
@@ -79,13 +74,8 @@ export const updateRole = async (req: Request, res: Response) => {
       await (role as any).setPermissions(permissionIds); // <-- sync permission
     }
 
-    // 4. ambil ulang role beserta permissionnya
-    const updatedRole = await Role.findByPk(id, {
-      include: [Permission],
-    });
-
-    res.status(201).json({ message: 'Data berhasil dibuat', data: updateRole });
+    res.status(201).json({ message: 'Data berhasil dibuat' });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating role', error });
+    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
   }
 };

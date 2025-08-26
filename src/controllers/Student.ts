@@ -77,8 +77,7 @@ export const getStudentById = async (req: Request, res: Response) => {
         },
       ],
     });
-    if (!student)
-      return res.status(404).json({ message: 'Student tidak ditemukan' });
+    if (!student) return sendError(res, 404, 'DATA NOT FOUND');
     res.json(student);
   } catch (error) {
     sendError(res, 500, 'INTERNAL SERVER ERROR', error);
@@ -149,7 +148,7 @@ export const deleteStudent = async (req: Request, res: Response) => {
     if (!student) return sendError(res, 404, 'Student tidak ditemukan');
 
     await student.destroy();
-    res.json({ message: 'Student berhasil dihapus' });
+    res.status(200).json({ message: 'Student berhasil dihapus' });
   } catch (error) {
     sendError(res, 500, 'INTERNAL SERVER ERROR', error);
   }

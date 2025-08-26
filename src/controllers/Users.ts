@@ -80,7 +80,7 @@ export const getById = async (req: Request<{ id: string }>, res: Response) => {
   }
 
   try {
-    sendSuccess(res, users, 'Success get user data');
+    sendSuccess(res, 'Success get user data', users);
   } catch (err: any) {
     sendError(res, 500, 'INTERNAL SERVER ERROR', err);
   }

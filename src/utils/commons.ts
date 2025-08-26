@@ -11,8 +11,8 @@ export function sendError(
 
 export function sendSuccess(
   res: Response,
-  data?: any,
-  message: string = 'Success'
+  message: string = 'Success',
+  data?: any
 ) {
   return res.status(200).json({ message, data });
 }
