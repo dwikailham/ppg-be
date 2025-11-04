@@ -72,10 +72,4 @@ Student.init(
   }
 );
 
-// // 🟢 Relasi ke Desa
-// Student.belongsTo(DesaModel, { foreignKey: 'desa_id', as: 'desa' });
-
-// // 🟢 Relasi ke Kelompok
-// Student.belongsTo(KelompokModel, { foreignKey: 'kelompok_id', as: 'kelompok' });
-
 export default Student;

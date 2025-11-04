@@ -67,42 +67,6 @@ export const roleMiddleware = (allowedRoles: string[]) => {
   };
 };
 
-// export const scopeFilterMiddleware = (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const user = (req as any).user_data; // payload JWT
-//     if (!user || !user.scopes) {
-//       return res.status(403).json({ message: 'Unauthorized: no scope' });
-//     }
-
-//     // Grup scope berdasarkan tipe
-//     const scopeFilters = user.scopes.reduce((acc: any, s: any) => {
-//       if (!acc[s.scoped_entity_type]) {
-//         acc[s.scoped_entity_type] = [];
-//       }
-//       acc[s.scoped_entity_type].push(s.scoped_entity_id);
-//       return acc;
-//     }, {});
-
-//     /**
-//      * Hasil scopeFilters akan seperti:
-//      * {
-//      *   DESA: [1, 2],
-//      *   KELOMPOK: [3, 4]
-//      * }
-//      */
-//     (req as any).scopeFilters = scopeFilters;
-
-//     next();
-//   } catch (err) {
-//     console.error('ScopeFilter middleware error:', err);
-//     res.status(500).json({ message: 'Internal Server Error' });
-//   }
-// };
-
 export const scopeFilterMiddleware = (
   entity: 'student' | 'desa' | 'kelompok'
 ) => {
