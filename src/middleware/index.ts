@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import Users, { UserAttributes } from '../models/User';
+import { Op } from 'sequelize';
 
 interface ValidationRequest extends Request {
   user_data: UserAttributes;
@@ -63,5 +64,103 @@ export const roleMiddleware = (allowedRoles: string[]) => {
     }
 
     next();
+  };
+};
+
+// export const scopeFilterMiddleware = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const user = (req as any).user_data; // payload JWT
+//     if (!user || !user.scopes) {
+//       return res.status(403).json({ message: 'Unauthorized: no scope' });
+//     }
+
+//     // Grup scope berdasarkan tipe
+//     const scopeFilters = user.scopes.reduce((acc: any, s: any) => {
+//       if (!acc[s.scoped_entity_type]) {
+//         acc[s.scoped_entity_type] = [];
+//       }
+//       acc[s.scoped_entity_type].push(s.scoped_entity_id);
+//       return acc;
+//     }, {});
+
+//     /**
+//      * Hasil scopeFilters akan seperti:
+//      * {
+//      *   DESA: [1, 2],
+//      *   KELOMPOK: [3, 4]
+//      * }
+//      */
+//     (req as any).scopeFilters = scopeFilters;
+
+//     next();
+//   } catch (err) {
+//     console.error('ScopeFilter middleware error:', err);
+//     res.status(500).json({ message: 'Internal Server Error' });
+//   }
+// };
+
+export const scopeFilterMiddleware = (
+  entity: 'student' | 'desa' | 'kelompok'
+) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = (req as any).user_data;
+      if (!user || !user.scopes) {
+        (req as any).scopeFilter = {}; // no scope
+        return next();
+      }
+
+      console.log('DSADSA', user.scopes);
+
+      const scopes = user.scopes;
+      const filter: any = {};
+
+      // 🧠 Logic tergantung entity yang diakses
+      if (entity === 'student') {
+        const desaScopes = scopes.filter((s: any) => s.type === 'DESA');
+        const kelompokScopes = scopes.filter((s: any) => s.type === 'KELOMPOK');
+
+        if (desaScopes.length > 0) {
+          filter['$kelompok.desa_id$'] = {
+            [Op.in]: desaScopes.map((s: any) => s.desa.id),
+          };
+        }
+
+        if (kelompokScopes.length > 0) {
+          filter['kelompok_id'] = {
+            [Op.in]: kelompokScopes.map((s: any) => s.kelompok.id),
+          };
+        }
+      }
+
+      if (entity === 'desa') {
+        const desaScopes = scopes.filter((s: any) => s.type === 'DESA');
+        if (desaScopes.length > 0) {
+          filter.id = {
+            [Op.in]: desaScopes.map((s: any) => s.desa.id),
+          };
+        }
+      }
+
+      if (entity === 'kelompok') {
+        const kelompokScopes = scopes.filter((s: any) => s.type === 'KELOMPOK');
+        if (kelompokScopes.length > 0) {
+          filter.id = {
+            [Op.in]: kelompokScopes.map((s: any) => s.kelompok.id),
+          };
+        }
+      }
+
+      // simpan filter agar bisa dipakai di controller
+      (req as any).scopeFilter = filter;
+      next();
+    } catch (error) {
+      console.error('Scope middleware error:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
   };
 };

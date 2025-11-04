@@ -6,11 +6,16 @@ import {
   updateStudent,
   deleteStudent,
 } from '../controllers/Student';
-import { accessValidation } from '../middleware';
+import { accessValidation, scopeFilterMiddleware } from '../middleware';
 
 const router = express.Router();
 
-router.get('/student', accessValidation, getAllStudents);
+router.get(
+  '/student',
+  accessValidation,
+  scopeFilterMiddleware('student'),
+  getAllStudents
+);
 router.get('/student/detail/:id', accessValidation, getStudentById);
 router.post('/student', accessValidation, createStudent);
 router.patch('/student/update/:id', accessValidation, updateStudent);

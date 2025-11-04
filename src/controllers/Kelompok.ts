@@ -11,7 +11,7 @@ export const getAllKelompok = async (req: Request, res: Response) => {
     const offset = (page - 1) * limit;
 
     const { count, rows } = await KelompokModel.findAndCountAll({
-      include: [{ model: DesaModel, attributes: ['id', 'name'] }],
+      include: [{ model: DesaModel, attributes: ['id', 'name'], as: 'desa' }],
       limit,
       offset,
       attributes: { exclude: ['created_at', 'updated_at', 'desa_id'] },
@@ -36,6 +36,7 @@ export const getAllKelompok = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
+    console.log('ERROR CATCH', error);
     sendError(res, 500, 'INTERNAL SERVER ERROR', error);
   }
 };

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { StudentModel, KelompokModel, DesaModel } from '../models/index';
 import { sendError } from '../utils/commons';
+import { Op } from 'sequelize';
 
 type StudentBody = {
   name: string;
@@ -17,23 +18,25 @@ export const getAllStudents = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 10; // default 10 data
     const offset = (page - 1) * limit;
 
-    const { desas, kelompoks } = (req as any).user_data;
+    const whereCondition = (req as any).scopeFilter || {};
 
     const { count, rows } = await StudentModel.findAndCountAll({
+      where: whereCondition,
       include: [
         {
           model: KelompokModel,
+          as: 'kelompok',
           attributes: ['id', 'name'],
-          where: { id: kelompoks },
           include: [
             {
               model: DesaModel,
+              as: 'desa',
               attributes: ['id', 'name'],
-              where: { id: desas },
             },
           ],
         },
       ],
+      subQuery: false,
       limit,
       offset,
       attributes: { exclude: ['created_at', 'updated_at', 'kelompok_id'] },
@@ -54,7 +57,7 @@ export const getAllStudents = async (req: Request, res: Response) => {
     }));
 
     res.json({
-      data: result,
+      data: rows,
       pagination: {
         total: count,
         totalPages: Math.ceil(count / limit),
@@ -62,6 +65,7 @@ export const getAllStudents = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
+    console.log('ERROR CATCH', error);
     sendError(res, 500, 'INTERNAL SERVER ERROR', error);
   }
 };

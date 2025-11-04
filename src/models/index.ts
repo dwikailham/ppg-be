@@ -32,11 +32,14 @@ UserScope.belongsTo(UserModel, { foreignKey: 'user_id' });
 
 // Desa → Kelompok
 DesaModel.hasMany(KelompokModel, { foreignKey: 'desa_id' });
-KelompokModel.belongsTo(DesaModel, { foreignKey: 'desa_id' });
+KelompokModel.belongsTo(DesaModel, { foreignKey: 'desa_id', as: 'desa' });
 
 // Kelompok → Student
 KelompokModel.hasMany(StudentModel, { foreignKey: 'kelompok_id' });
-StudentModel.belongsTo(KelompokModel, { foreignKey: 'kelompok_id' });
+StudentModel.belongsTo(KelompokModel, {
+  foreignKey: 'kelompok_id',
+  as: 'kelompok',
+});
 
 export {
   UserModel,

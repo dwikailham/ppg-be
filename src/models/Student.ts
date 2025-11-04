@@ -1,7 +1,7 @@
 // models/student.model.ts
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/db';
-import { KelompokModel } from './index';
+import { KelompokModel, DesaModel } from './index';
 export interface StudentAttributes {
   id?: number; // optional if auto-increment
   kelompok_id: number;
@@ -71,5 +71,11 @@ Student.init(
     updatedAt: 'updated_at',
   }
 );
+
+// // 🟢 Relasi ke Desa
+// Student.belongsTo(DesaModel, { foreignKey: 'desa_id', as: 'desa' });
+
+// // 🟢 Relasi ke Kelompok
+// Student.belongsTo(KelompokModel, { foreignKey: 'kelompok_id', as: 'kelompok' });
 
 export default Student;
