@@ -40,7 +40,7 @@ export const getAllKelompok = async (req: Request, res: Response) => {
 export const getKelompokById = async (req: Request, res: Response) => {
   try {
     const kelompok = await KelompokModel.findByPk(req.params.id, {
-      include: [{ model: DesaModel, attributes: ['id', 'name'] }],
+      include: [{ model: DesaModel, attributes: ['id', 'name'], as: 'desa' }],
     });
     if (!kelompok)
       return sendError(res, HTTP_STATUS.NOT_FOUND, HTTP_MESSAGE.NOT_FOUND);
@@ -92,11 +92,6 @@ export const updateKelompok = async (req: Request, res: Response) => {
   const { name, desa_id, address } = req.body;
   if (!name || !desa_id) {
     return sendError(res, HTTP_STATUS.BAD_REQUEST, HTTP_MESSAGE.BAD_REQUEST);
-  }
-
-  const existingKelompok = await KelompokModel.findOne({ where: { name } });
-  if (existingKelompok) {
-    return sendError(res, HTTP_STATUS.BAD_REQUEST, 'Nama sudah digunakan');
   }
 
   const desa = await DesaModel.findByPk(desa_id);

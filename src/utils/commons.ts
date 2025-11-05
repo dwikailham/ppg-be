@@ -13,7 +13,7 @@ export function sendError(
 export function sendSuccess(
   res: Response,
   message: string = HTTP_MESSAGE.OK,
-  data?: any
+  data?: unknown
 ) {
   return res.status(HTTP_STATUS.OK).json({ message, data });
 }

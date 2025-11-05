@@ -119,6 +119,19 @@ export const getMe = async (req: Request, res: Response) => {
           attributes: ['id', 'role_name'],
           through: { attributes: [] },
         },
+        {
+          model: UserScope,
+          as: 'scopes',
+          attributes: ['id', 'scoped_entity_type', 'scoped_entity_id'],
+          include: [
+            { model: DesaModel, as: 'desa', attributes: ['id', 'name'] },
+            {
+              model: KelompokModel,
+              as: 'kelompok',
+              attributes: ['id', 'name'],
+            },
+          ],
+        },
       ],
     });
 

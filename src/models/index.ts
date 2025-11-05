@@ -31,7 +31,7 @@ UserModel.hasMany(UserScope, { foreignKey: 'user_id', as: 'scopes' });
 UserScope.belongsTo(UserModel, { foreignKey: 'user_id' });
 
 // Desa → Kelompok
-DesaModel.hasMany(KelompokModel, { foreignKey: 'desa_id' });
+DesaModel.hasMany(KelompokModel, { foreignKey: 'desa_id', as: 'kelompoks' });
 KelompokModel.belongsTo(DesaModel, { foreignKey: 'desa_id', as: 'desa' });
 
 // Kelompok → Student
