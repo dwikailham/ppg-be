@@ -18,17 +18,8 @@ export const getAllKelompok = async (req: Request, res: Response) => {
       order: [['created_at', 'DESC']],
     });
 
-    const result = rows.map((kelompok) => ({
-      id: kelompok.id,
-      name: kelompok.name,
-      address: kelompok.address,
-      desa: kelompok.Desa
-        ? { id: kelompok.Desa.id, name: kelompok.Desa.name }
-        : null,
-    }));
-
     res.status(200).json({
-      data: result,
+      data: rows,
       pagination: {
         total: count,
         totalPages: Math.ceil(count / limit),
@@ -36,7 +27,6 @@ export const getAllKelompok = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.log('ERROR CATCH', error);
     sendError(res, 500, 'INTERNAL SERVER ERROR', error);
   }
 };
