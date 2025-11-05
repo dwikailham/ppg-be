@@ -19,3 +19,12 @@ export const HTTP_MESSAGE = {
   CONFLICT: 'Conflict detected',
   INTERNAL_SERVER_ERROR: 'Internal server error',
 };
+
+export const SCOPE_TYPE = {
+  KELOMPOK: 'KELOMPOK',
+  DESA: 'DESA',
+};
+
+type HttpStatusKey = keyof typeof HTTP_STATUS;
+
+export type ScopeType = keyof typeof SCOPE_TYPE;

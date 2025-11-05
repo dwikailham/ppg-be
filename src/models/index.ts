@@ -20,6 +20,7 @@ Role.belongsToMany(UserModel, { through: UserRole, foreignKey: 'role_id' });
 Role.belongsToMany(Permission, {
   through: RolePermission,
   foreignKey: 'role_id',
+  as: 'permissions',
 });
 Permission.belongsToMany(Role, {
   through: RolePermission,

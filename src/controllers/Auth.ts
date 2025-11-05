@@ -10,10 +10,21 @@ import {
 import argon2 from 'argon2';
 import { UserAttributes } from '../models/User';
 import { sendError } from '../utils/commons';
-import { HTTP_MESSAGE, HTTP_STATUS } from '../utils/constants';
+import {
+  HTTP_MESSAGE,
+  HTTP_STATUS,
+  SCOPE_TYPE,
+  ScopeType,
+} from '../utils/constants';
 
 type UserWithRelations = UserAttributes & {
-  scopes: Array<any>;
+  scopes: Array<{
+    id: number;
+    scoped_entity_type: ScopeType;
+    scoped_entity_id: number;
+    desa: { id: number; name: string } | null;
+    kelompok: { id: number; name: string } | null;
+  }>;
 };
 
 export const Login = async (req: Request, res: Response) => {
@@ -66,18 +77,16 @@ export const Login = async (req: Request, res: Response) => {
     const plainUser = user.get({ plain: true }) as UserWithRelations;
     delete (plainUser as any).password;
     const formattedScopes = plainUser.scopes.map((s) => {
-      if (s.scoped_entity_type === 'DESA') {
+      if (s.scoped_entity_type === SCOPE_TYPE.DESA) {
         return {
-          id: s.id,
-          type: s.scoped_entity_type,
+          ...s,
           desa: s.desa,
           kelompok: null,
         };
       }
-      if (s.scoped_entity_type === 'KELOMPOK') {
+      if (s.scoped_entity_type === SCOPE_TYPE.KELOMPOK) {
         return {
-          id: s.id,
-          type: s.scoped_entity_type,
+          ...s,
           desa: null,
           kelompok: s.kelompok,
         };

@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import Users, { UserAttributes } from '../models/User';
 import { Op } from 'sequelize';
-import { HTTP_MESSAGE, HTTP_STATUS } from '../utils/constants';
+import { HTTP_MESSAGE, HTTP_STATUS, SCOPE_TYPE } from '../utils/constants';
 
 interface ValidationRequest extends Request {
   user_data: UserAttributes;
@@ -90,8 +90,12 @@ export const scopeFilterMiddleware = (
 
       // 🧠 Logic tergantung entity yang diakses
       if (entity === 'student') {
-        const desaScopes = scopes.filter((s: any) => s.type === 'DESA');
-        const kelompokScopes = scopes.filter((s: any) => s.type === 'KELOMPOK');
+        const desaScopes = scopes.filter(
+          (s: any) => s.type === SCOPE_TYPE.DESA
+        );
+        const kelompokScopes = scopes.filter(
+          (s: any) => s.type === SCOPE_TYPE.KELOMPOK
+        );
 
         if (desaScopes.length > 0) {
           filter['$kelompok.desa_id$'] = {
@@ -107,7 +111,9 @@ export const scopeFilterMiddleware = (
       }
 
       if (entity === 'desa') {
-        const desaScopes = scopes.filter((s: any) => s.type === 'DESA');
+        const desaScopes = scopes.filter(
+          (s: any) => s.type === SCOPE_TYPE.DESA
+        );
         if (desaScopes.length > 0) {
           filter.id = {
             [Op.in]: desaScopes.map((s: any) => s.desa.id),
@@ -116,7 +122,9 @@ export const scopeFilterMiddleware = (
       }
 
       if (entity === 'kelompok') {
-        const kelompokScopes = scopes.filter((s: any) => s.type === 'KELOMPOK');
+        const kelompokScopes = scopes.filter(
+          (s: any) => s.type === SCOPE_TYPE.KELOMPOK
+        );
         if (kelompokScopes.length > 0) {
           filter.id = {
             [Op.in]: kelompokScopes.map((s: any) => s.kelompok.id),
