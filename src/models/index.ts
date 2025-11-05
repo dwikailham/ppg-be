@@ -20,6 +20,7 @@ Role.belongsToMany(UserModel, { through: UserRole, foreignKey: 'role_id' });
 Role.belongsToMany(Permission, {
   through: RolePermission,
   foreignKey: 'role_id',
+  as: 'permissions',
 });
 Permission.belongsToMany(Role, {
   through: RolePermission,
@@ -31,7 +32,7 @@ UserModel.hasMany(UserScope, { foreignKey: 'user_id', as: 'scopes' });
 UserScope.belongsTo(UserModel, { foreignKey: 'user_id' });
 
 // Desa → Kelompok
-DesaModel.hasMany(KelompokModel, { foreignKey: 'desa_id' });
+DesaModel.hasMany(KelompokModel, { foreignKey: 'desa_id', as: 'kelompoks' });
 KelompokModel.belongsTo(DesaModel, { foreignKey: 'desa_id', as: 'desa' });
 
 // Kelompok → Student

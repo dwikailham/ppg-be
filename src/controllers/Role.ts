@@ -12,7 +12,16 @@ export const getRoles = async (req: Request, res: Response) => {
     const { count, rows } = await Role.findAndCountAll({
       limit,
       offset,
-      include: [Permission],
+      include: [
+        {
+          model: Permission,
+          as: 'permissions',
+          attributes: {
+            exclude: ['createdAt', 'updatedAt'],
+          },
+          through: { attributes: [] },
+        },
+      ],
       order: [['created_at', 'DESC']],
     });
 

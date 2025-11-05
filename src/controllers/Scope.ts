@@ -3,7 +3,18 @@ import { UserScope } from '../models/UserScope';
 import { Sequelize } from 'sequelize';
 import { DesaModel, KelompokModel } from '../models';
 import { sendError, sendSuccess } from '../utils/commons';
-import { HTTP_MESSAGE, HTTP_STATUS } from '../utils/constants';
+import {
+  HTTP_MESSAGE,
+  HTTP_STATUS,
+  SCOPE_TYPE,
+  ScopeType,
+} from '../utils/constants';
+
+interface BodyPayload {
+  user_id: number;
+  scoped_entity_type: ScopeType;
+  scoped_entity_id: number;
+}
 
 export const getUserScopes = async (req: Request, res: Response) => {
   try {
@@ -19,7 +30,7 @@ export const getUserScopes = async (req: Request, res: Response) => {
           required: false,
           where: Sequelize.where(
             Sequelize.col('UserScope.scoped_entity_type'),
-            'DESA'
+            SCOPE_TYPE.DESA
           ),
         },
         {
@@ -28,7 +39,7 @@ export const getUserScopes = async (req: Request, res: Response) => {
           required: false,
           where: Sequelize.where(
             Sequelize.col('UserScope.scoped_entity_type'),
-            'KELOMPOK'
+            SCOPE_TYPE.KELOMPOK
           ),
         },
       ],
@@ -55,8 +66,15 @@ export const getUserScopes = async (req: Request, res: Response) => {
   }
 };
 
-export const addUserScope = async (req: Request, res: Response) => {
+export const addUserScope = async (
+  req: Request<{}, {}, BodyPayload>,
+  res: Response
+) => {
   const { scoped_entity_type, scoped_entity_id, user_id } = req.body;
+
+  if (!scoped_entity_id || !scoped_entity_type || !user_id) {
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, HTTP_MESSAGE.BAD_REQUEST);
+  }
 
   try {
     await UserScope.create({

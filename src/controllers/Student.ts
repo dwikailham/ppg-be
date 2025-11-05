@@ -68,7 +68,10 @@ export const getStudentById = async (req: Request, res: Response) => {
         {
           model: KelompokModel,
           attributes: ['id', 'name'],
-          include: [{ model: DesaModel, attributes: ['id', 'name'] }],
+          as: 'kelompok',
+          include: [
+            { model: DesaModel, attributes: ['id', 'name'], as: 'desa' },
+          ],
         },
       ],
     });

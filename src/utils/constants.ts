@@ -19,3 +19,17 @@ export const HTTP_MESSAGE = {
   CONFLICT: 'Conflict detected',
   INTERNAL_SERVER_ERROR: 'Internal server error',
 };
+
+export const SCOPE_TYPE = {
+  KELOMPOK: 'KELOMPOK',
+  DESA: 'DESA',
+};
+
+export const SCOPE_FILTER_MIDDLEWARE = {
+  STUDENT: 'STUDENT',
+  KELOMPOK: 'KELOMPOK',
+  DESA: 'DESA',
+} as const;
+
+export type ScopeType = keyof typeof SCOPE_TYPE;
+export type ScopeFilterMiddleware = keyof typeof SCOPE_FILTER_MIDDLEWARE;

@@ -1,10 +1,11 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/db';
 import { DesaModel, KelompokModel } from './index';
+import { SCOPE_TYPE, ScopeType } from '../utils/constants';
 
 export class UserScope extends Model {
   declare user_id: number;
-  declare scoped_entity_type: 'DESA' | 'KELOMPOK';
+  declare scoped_entity_type: ScopeType;
   declare scoped_entity_id: number;
 }
 
@@ -12,7 +13,7 @@ UserScope.init(
   {
     user_id: { type: DataTypes.INTEGER, allowNull: false },
     scoped_entity_type: {
-      type: DataTypes.ENUM('DESA', 'KELOMPOK'),
+      type: DataTypes.ENUM(SCOPE_TYPE.DESA, SCOPE_TYPE.KELOMPOK),
       allowNull: false,
     },
     scoped_entity_id: { type: DataTypes.INTEGER, allowNull: false },

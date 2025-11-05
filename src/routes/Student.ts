@@ -7,13 +7,14 @@ import {
   deleteStudent,
 } from '../controllers/Student';
 import { accessValidation, scopeFilterMiddleware } from '../middleware';
+import { SCOPE_FILTER_MIDDLEWARE } from '../utils/constants';
 
 const router = express.Router();
 
 router.get(
   '/student',
   accessValidation,
-  scopeFilterMiddleware('student'),
+  scopeFilterMiddleware(SCOPE_FILTER_MIDDLEWARE.STUDENT),
   getAllStudents
 );
 router.get('/student/detail/:id', accessValidation, getStudentById);

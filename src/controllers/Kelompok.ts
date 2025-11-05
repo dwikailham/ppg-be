@@ -40,9 +40,10 @@ export const getAllKelompok = async (req: Request, res: Response) => {
 export const getKelompokById = async (req: Request, res: Response) => {
   try {
     const kelompok = await KelompokModel.findByPk(req.params.id, {
-      include: [{ model: DesaModel, attributes: ['id', 'name'] }],
+      include: [{ model: DesaModel, attributes: ['id', 'name'], as: 'desa' }],
     });
-    if (!kelompok) return sendError(res, 404, 'Kelompok tidak ditemukan');
+    if (!kelompok)
+      return sendError(res, HTTP_STATUS.NOT_FOUND, HTTP_MESSAGE.NOT_FOUND);
     res.status(HTTP_STATUS.OK).json(kelompok);
   } catch (error) {
     sendError(
@@ -93,18 +94,14 @@ export const updateKelompok = async (req: Request, res: Response) => {
     return sendError(res, HTTP_STATUS.BAD_REQUEST, HTTP_MESSAGE.BAD_REQUEST);
   }
 
-  const existingKelompok = await KelompokModel.findOne({ where: { name } });
-  if (existingKelompok) {
-    return sendError(res, HTTP_STATUS.BAD_REQUEST, 'Nama sudah digunakan');
-  }
-
   const desa = await DesaModel.findByPk(desa_id);
   if (!desa) {
     return sendError(res, HTTP_STATUS.BAD_REQUEST, 'Desa Tidak Ditemukan');
   }
   try {
     const kelompok = await KelompokModel.findByPk(req.params.id);
-    if (!kelompok) return sendError(res, 404, 'Kelompok tidak ditemukan');
+    if (!kelompok)
+      return sendError(res, HTTP_STATUS.NOT_FOUND, HTTP_MESSAGE.NOT_FOUND);
 
     await kelompok.update({
       desa_id,
@@ -128,7 +125,7 @@ export const deleteKelompok = async (req: Request, res: Response) => {
   try {
     const kelompok = await KelompokModel.findByPk(req.params.id);
     if (!kelompok)
-      return sendError(res, HTTP_STATUS.NOT_FOUND, 'Kelompok tidak ditemukan');
+      return sendError(res, HTTP_STATUS.NOT_FOUND, HTTP_MESSAGE.NOT_FOUND);
 
     await kelompok.destroy();
     res.json({ message: 'Kelompok berhasil dihapus' });
