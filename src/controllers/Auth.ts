@@ -17,7 +17,7 @@ import {
   ScopeType,
 } from '../utils/constants';
 
-type UserWithRelations = UserAttributes & {
+export type UserWithRelations = UserAttributes & {
   scopes: Array<{
     id: number;
     scoped_entity_type: ScopeType;

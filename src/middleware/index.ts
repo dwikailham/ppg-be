@@ -2,7 +2,14 @@ import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import Users, { UserAttributes } from '../models/User';
 import { Op } from 'sequelize';
-import { HTTP_MESSAGE, HTTP_STATUS, SCOPE_TYPE } from '../utils/constants';
+import {
+  HTTP_MESSAGE,
+  HTTP_STATUS,
+  SCOPE_TYPE,
+  ScopeFilterMiddleware,
+  SCOPE_FILTER_MIDDLEWARE,
+} from '../utils/constants';
+import { UserWithRelations } from '../controllers/Auth';
 
 interface ValidationRequest extends Request {
   user_data: UserAttributes;
@@ -74,12 +81,10 @@ export const roleMiddleware = (allowedRoles: string[]) => {
   };
 };
 
-export const scopeFilterMiddleware = (
-  entity: 'student' | 'desa' | 'kelompok'
-) => {
+export const scopeFilterMiddleware = (entity: ScopeFilterMiddleware) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = (req as any).user_data;
+      const user = (req as any).user_data as UserWithRelations;
       if (!user || !user.scopes) {
         (req as any).scopeFilter = {}; // no scope
         return next();
@@ -89,45 +94,45 @@ export const scopeFilterMiddleware = (
       const filter: any = {};
 
       // 🧠 Logic tergantung entity yang diakses
-      if (entity === 'student') {
+      if (entity === SCOPE_FILTER_MIDDLEWARE.STUDENT) {
         const desaScopes = scopes.filter(
-          (s: any) => s.type === SCOPE_TYPE.DESA
+          (s) => s.scoped_entity_type === SCOPE_TYPE.DESA
         );
         const kelompokScopes = scopes.filter(
-          (s: any) => s.type === SCOPE_TYPE.KELOMPOK
+          (s) => s.scoped_entity_type === SCOPE_TYPE.KELOMPOK
         );
 
         if (desaScopes.length > 0) {
           filter['$kelompok.desa_id$'] = {
-            [Op.in]: desaScopes.map((s: any) => s.desa.id),
+            [Op.in]: desaScopes.map((s) => s.desa?.id),
           };
         }
 
         if (kelompokScopes.length > 0) {
           filter['kelompok_id'] = {
-            [Op.in]: kelompokScopes.map((s: any) => s.kelompok.id),
+            [Op.in]: kelompokScopes.map((s) => s.kelompok?.id),
           };
         }
       }
 
-      if (entity === 'desa') {
+      if (entity === SCOPE_FILTER_MIDDLEWARE.DESA) {
         const desaScopes = scopes.filter(
-          (s: any) => s.type === SCOPE_TYPE.DESA
+          (s) => s.scoped_entity_type === SCOPE_TYPE.DESA
         );
         if (desaScopes.length > 0) {
           filter.id = {
-            [Op.in]: desaScopes.map((s: any) => s.desa.id),
+            [Op.in]: desaScopes.map((s) => s.desa?.id),
           };
         }
       }
 
-      if (entity === 'kelompok') {
+      if (entity === SCOPE_FILTER_MIDDLEWARE.KELOMPOK) {
         const kelompokScopes = scopes.filter(
-          (s: any) => s.type === SCOPE_TYPE.KELOMPOK
+          (s) => s.scoped_entity_type === SCOPE_TYPE.KELOMPOK
         );
         if (kelompokScopes.length > 0) {
           filter.id = {
-            [Op.in]: kelompokScopes.map((s: any) => s.kelompok.id),
+            [Op.in]: kelompokScopes.map((s) => s.kelompok?.id),
           };
         }
       }
