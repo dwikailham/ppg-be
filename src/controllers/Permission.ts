@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Permission } from '../models';
 import { sendError } from '../utils/commons';
+import { HTTP_MESSAGE, HTTP_STATUS } from '../utils/constants';
 
 export const getPermissions = async (req: Request, res: Response) => {
   try {
@@ -17,7 +18,7 @@ export const getPermissions = async (req: Request, res: Response) => {
       order: [['createdAt', 'DESC']],
     });
 
-    res.json({
+    res.status(HTTP_STATUS.OK).json({
       data: rows,
       pagination: {
         total: count,
@@ -26,7 +27,12 @@ export const getPermissions = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      error
+    );
   }
 };
 
@@ -34,20 +40,25 @@ export const createPermission = async (req: Request, res: Response) => {
   const { permission_name } = req.body;
   try {
     if (!permission_name) {
-      return sendError(res, 400, 'BAD REQUEST');
+      return sendError(res, HTTP_STATUS.BAD_REQUEST, HTTP_MESSAGE.BAD_REQUEST);
     }
 
     const existingData = await Permission.findOne({
       where: { permission_name },
     });
     if (existingData) {
-      return sendError(res, 400, 'DATA IS ALREADY EXISTS');
+      return sendError(res, HTTP_STATUS.BAD_REQUEST, 'DATA IS ALREADY EXISTS');
     }
 
     await Permission.create({ permission_name });
 
-    res.status(201).json({ message: 'Data berhasil dibuat' });
+    res.status(HTTP_STATUS.CREATED).json({ message: HTTP_MESSAGE.CREATED });
   } catch (error) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      error
+    );
   }
 };

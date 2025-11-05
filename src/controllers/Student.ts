@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { StudentModel, KelompokModel, DesaModel } from '../models/index';
 import { sendError } from '../utils/commons';
+import { HTTP_MESSAGE, HTTP_STATUS } from '../utils/constants';
 
 type StudentBody = {
   name: string;
@@ -17,44 +18,33 @@ export const getAllStudents = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 10; // default 10 data
     const offset = (page - 1) * limit;
 
-    const { desas, kelompoks } = (req as any).user_data;
+    const whereCondition = (req as any).scopeFilter || {};
 
     const { count, rows } = await StudentModel.findAndCountAll({
+      where: whereCondition,
       include: [
         {
           model: KelompokModel,
+          as: 'kelompok',
           attributes: ['id', 'name'],
-          where: { id: kelompoks },
           include: [
             {
               model: DesaModel,
+              as: 'desa',
               attributes: ['id', 'name'],
-              where: { id: desas },
             },
           ],
         },
       ],
+      subQuery: false,
       limit,
       offset,
       attributes: { exclude: ['created_at', 'updated_at', 'kelompok_id'] },
       order: [['created_at', 'DESC']],
     });
 
-    const result = rows.map((el) => ({
-      id: el.id,
-      name: el.name,
-      address: el.address,
-      gender: el.gender,
-      birth_date: el.birth_date,
-      phone: el.phone,
-      desa: el?.Kelompok ? el.Kelompok.Desa : null,
-      kelompok: el?.Kelompok
-        ? { id: el.Kelompok.id, name: el.Kelompok.name }
-        : null,
-    }));
-
-    res.json({
-      data: result,
+    res.status(HTTP_STATUS.OK).json({
+      data: rows,
       pagination: {
         total: count,
         totalPages: Math.ceil(count / limit),
@@ -62,7 +52,12 @@ export const getAllStudents = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      error
+    );
   }
 };
 
@@ -78,10 +73,15 @@ export const getStudentById = async (req: Request, res: Response) => {
       ],
     });
     if (!student)
-      return res.status(404).json({ message: 'Student tidak ditemukan' });
+      return sendError(res, HTTP_STATUS.NOT_FOUND, HTTP_MESSAGE.NOT_FOUND);
     res.json(student);
   } catch (error) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      error
+    );
   }
 };
 
@@ -91,12 +91,12 @@ export const createStudent = async (
 ) => {
   const { address, birth_date, gender, kelompok_id, name, phone } = req.body;
   if (!name || !kelompok_id) {
-    return sendError(res, 400, 'BAD REQUEST');
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, HTTP_MESSAGE.BAD_REQUEST);
   }
 
   const existingKelompok = await KelompokModel.findByPk(kelompok_id);
   if (!existingKelompok) {
-    return sendError(res, 400, 'Kelompok tidak ditemukan');
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, 'Kelompok tidak ditemukan');
   }
 
   try {
@@ -108,26 +108,32 @@ export const createStudent = async (
       name,
       phone,
     });
-    res.status(201).json({ message: 'Student berhasil dibuat' });
+    res.status(HTTP_STATUS.CREATED).json({ message: HTTP_MESSAGE.CREATED });
   } catch (error) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      error
+    );
   }
 };
 
 export const updateStudent = async (req: Request, res: Response) => {
   const { address, birth_date, gender, kelompok_id, name, phone } = req.body;
   if (!name || !kelompok_id) {
-    return sendError(res, 400, 'BAD REQUEST');
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, HTTP_MESSAGE.BAD_REQUEST);
   }
 
   const existingKelompok = await KelompokModel.findByPk(kelompok_id);
   if (!existingKelompok) {
-    return sendError(res, 400, 'Kelompok tidak ditemukan');
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, 'Kelompok tidak ditemukan');
   }
 
   try {
     const student = await StudentModel.findByPk(req.params.id);
-    if (!student) return sendError(res, 404, 'Student tidak ditemukan');
+    if (!student)
+      return sendError(res, HTTP_STATUS.NOT_FOUND, 'Student tidak ditemukan');
 
     await student.update({
       address,
@@ -137,20 +143,31 @@ export const updateStudent = async (req: Request, res: Response) => {
       name,
       phone,
     });
-    res.status(200).json({ message: 'Student berhasil diperbarui' });
+    res.status(HTTP_STATUS.OK).json({ message: 'Student berhasil diperbarui' });
   } catch (error) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      error
+    );
   }
 };
 
 export const deleteStudent = async (req: Request, res: Response) => {
   try {
     const student = await StudentModel.findByPk(req.params.id);
-    if (!student) return sendError(res, 404, 'Student tidak ditemukan');
+    if (!student)
+      return sendError(res, HTTP_STATUS.NOT_FOUND, HTTP_MESSAGE.NOT_FOUND);
 
     await student.destroy();
-    res.json({ message: 'Student berhasil dihapus' });
+    res.status(HTTP_STATUS.OK).json({ message: 'Student berhasil dihapus' });
   } catch (error) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      error
+    );
   }
 };

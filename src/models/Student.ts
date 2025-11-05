@@ -1,7 +1,7 @@
 // models/student.model.ts
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/db';
-import { KelompokModel } from './index';
+import { KelompokModel, DesaModel } from './index';
 export interface StudentAttributes {
   id?: number; // optional if auto-increment
   kelompok_id: number;

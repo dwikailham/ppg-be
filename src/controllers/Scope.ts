@@ -3,6 +3,7 @@ import { UserScope } from '../models/UserScope';
 import { Sequelize } from 'sequelize';
 import { DesaModel, KelompokModel } from '../models';
 import { sendError, sendSuccess } from '../utils/commons';
+import { HTTP_MESSAGE, HTTP_STATUS } from '../utils/constants';
 
 export const getUserScopes = async (req: Request, res: Response) => {
   try {
@@ -36,7 +37,7 @@ export const getUserScopes = async (req: Request, res: Response) => {
       order: [['createdAt', 'DESC']],
     });
 
-    res.status(200).json({
+    res.status(HTTP_STATUS.OK).json({
       data: rows,
       pagination: {
         total: count,
@@ -45,7 +46,12 @@ export const getUserScopes = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      error
+    );
   }
 };
 
@@ -61,12 +67,17 @@ export const addUserScope = async (req: Request, res: Response) => {
 
     sendSuccess(res, 'Scope added successfully');
   } catch (error) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      error
+    );
   }
 };
 
 export const deleteUserScope = async (req: Request, res: Response) => {
   const { scopeId } = req.params;
   await UserScope.destroy({ where: { id: scopeId } });
-  res.json({ message: 'Scope removed' });
+  sendSuccess(res, 'Scope successfully deleted');
 };
