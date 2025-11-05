@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import Users, { UserAttributes } from '../models/User';
 import { Op } from 'sequelize';
+import { HTTP_MESSAGE, HTTP_STATUS } from '../utils/constants';
 
 interface ValidationRequest extends Request {
   user_data: UserAttributes;
@@ -16,7 +17,9 @@ export const accessValidation = async (
   const { authorization } = validationRequest.headers;
 
   if (!authorization) {
-    return res.status(401).json({ message: 'Missing token' });
+    return res
+      .status(HTTP_STATUS.UNAUTHORIZED)
+      .json({ message: 'Missing token' });
   }
 
   const token = authorization.split(' ')[1];
@@ -31,14 +34,14 @@ export const accessValidation = async (
         attributes: ['id'],
       });
       if (!response) {
-        return res.status(401).json({
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           message: 'Unauthorized, User not found',
         });
       }
       validationRequest.user_data = jwt_decode as UserAttributes;
     }
   } catch (err) {
-    return res.status(401).json({
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json({
       message: 'Unauthorized, Invalid token',
       error: err,
     });
@@ -51,7 +54,9 @@ export const roleMiddleware = (allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const validationRequest = req as ValidationRequest;
     if (!validationRequest.user_data)
-      return res.status(401).json({ message: 'Unauthorized' });
+      return res
+        .status(HTTP_STATUS.UNAUTHORIZED)
+        .json({ message: 'Unauthorized' });
 
     const userRoles =
       validationRequest.user_data.roles?.map((r: any) => r.role_name) || [];
@@ -60,7 +65,9 @@ export const roleMiddleware = (allowedRoles: string[]) => {
       allowedRoles.includes(role)
     );
     if (!hasRole) {
-      return res.status(403).json({ message: 'Forbidden: insufficient role' });
+      return res
+        .status(HTTP_STATUS.FORBIDDEN)
+        .json({ message: HTTP_MESSAGE.FORBIDDEN });
     }
 
     next();
@@ -77,8 +84,6 @@ export const scopeFilterMiddleware = (
         (req as any).scopeFilter = {}; // no scope
         return next();
       }
-
-      console.log('DSADSA', user.scopes);
 
       const scopes = user.scopes;
       const filter: any = {};
@@ -124,7 +129,9 @@ export const scopeFilterMiddleware = (
       next();
     } catch (error) {
       console.error('Scope middleware error:', error);
-      res.status(500).json({ message: 'Internal Server Error' });
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ message: HTTP_MESSAGE.INTERNAL_SERVER_ERROR });
     }
   };
 };

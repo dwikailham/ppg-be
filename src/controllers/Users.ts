@@ -5,6 +5,7 @@ import { Op } from 'sequelize';
 import sequelize from '../config/db';
 import { Role } from '../models/Role';
 import { sendError, sendSuccess } from '../utils/commons';
+import { HTTP_MESSAGE, HTTP_STATUS } from '../utils/constants';
 
 type UserBody = {
   name: string;
@@ -47,7 +48,7 @@ export const getList = async (req: Request, res: Response) => {
     });
 
     const totalPages = Math.ceil(count / limit);
-    res.status(200).json({
+    res.status(HTTP_STATUS.OK).json({
       data: rows,
       pagination: {
         total: count,
@@ -56,7 +57,12 @@ export const getList = async (req: Request, res: Response) => {
       },
     });
   } catch (err: any) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', err);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      err
+    );
   }
 };
 
@@ -76,13 +82,18 @@ export const getById = async (req: Request<{ id: string }>, res: Response) => {
   });
 
   if (!users) {
-    return sendError(res, 400, 'User not exists');
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, 'User not exists');
   }
 
   try {
-    sendSuccess(res, 'Success get user data', users);
+    sendSuccess(res, HTTP_MESSAGE.OK, users);
   } catch (err: any) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', err);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      err
+    );
   }
 };
 
@@ -94,13 +105,13 @@ export const createData = async (
   const { name, username, password, roleIds } = req.body;
 
   if (!name || !username || !roleIds || roleIds?.length === 0) {
-    return sendError(res, 400, 'BAD REQUEST');
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, HTTP_MESSAGE.BAD_REQUEST);
   }
 
   try {
     const existingUser = await UserModel.findOne({ where: { username } });
     if (existingUser) {
-      return sendError(res, 400, 'Username already exists');
+      return sendError(res, HTTP_STATUS.BAD_REQUEST, 'Username already exists');
     }
     const hashPassword = await argon2.hash(password);
     const user = await UserModel.create({
@@ -117,29 +128,38 @@ export const createData = async (
 
     await t.commit();
 
-    res.status(201).json({ message: 'Registered!' });
+    res.status(HTTP_STATUS.CREATED).json({ message: HTTP_MESSAGE.CREATED });
   } catch (err: any) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', err);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      err
+    );
   }
 };
 
 export const updateData = async (req: Request, res: Response) => {
   const user_id = parseInt(req.params.id, 0);
   if (isNaN(user_id)) {
-    return res.status(400).json({ message: 'Invalid user ID' });
+    return res
+      .status(HTTP_STATUS.BAD_REQUEST)
+      .json({ message: 'Invalid user ID' });
   }
   const user = await UserModel.findOne({
     where: { id: user_id },
   });
 
   if (!user) {
-    return res.status(404).json({ message: 'User not found' });
+    return res
+      .status(HTTP_STATUS.NOT_FOUND)
+      .json({ message: HTTP_MESSAGE.NOT_FOUND });
   }
 
   const { password, is_active, roleIds } = req.body;
 
   if (!roleIds || roleIds?.length === 0) {
-    return sendError(res, 400, 'BAD REQUEST');
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, HTTP_MESSAGE.BAD_REQUEST);
   }
 
   let hashPassword;
@@ -169,9 +189,14 @@ export const updateData = async (req: Request, res: Response) => {
 
     await t.commit();
 
-    res.status(200).json({ message: 'User success updated!' });
+    res.status(HTTP_STATUS.OK).json({ message: 'User success updated!' });
   } catch (err: any) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', err);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      err
+    );
   }
 };
 
@@ -181,7 +206,9 @@ export const deleteData = async (req: Request, res: Response) => {
   });
 
   if (!user) {
-    return res.status(404).json({ message: 'User not found' });
+    return res
+      .status(HTTP_STATUS.NOT_FOUND)
+      .json({ message: HTTP_MESSAGE.NOT_FOUND });
   }
 
   try {
@@ -191,8 +218,13 @@ export const deleteData = async (req: Request, res: Response) => {
       },
     });
 
-    res.status(200).json({ message: 'User success deleted!' });
+    res.status(HTTP_STATUS.OK).json({ message: 'User success deleted!' });
   } catch (err: any) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', err);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      err
+    );
   }
 };

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { sendError } from '../utils/commons';
 import { Role, Permission } from '../models';
+import { HTTP_MESSAGE, HTTP_STATUS } from '../utils/constants';
 
 export const getRoles = async (req: Request, res: Response) => {
   try {
@@ -24,14 +25,19 @@ export const getRoles = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      error
+    );
   }
 };
 
 export const createRole = async (req: Request, res: Response) => {
   const { role_name, permissionIds } = req.body;
   if (!role_name || !permissionIds.length) {
-    return sendError(res, 400, 'BAD REQUEST');
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, HTTP_MESSAGE.BAD_REQUEST);
   }
   try {
     // 1. buat role baru
@@ -42,9 +48,11 @@ export const createRole = async (req: Request, res: Response) => {
       await (role as any).addPermissions(permissionIds); // karena belongsToMany
     }
 
-    res.status(201).json({ message: 'Data berhasil dibuat' });
+    res.status(HTTP_STATUS.CREATED).json({ message: 'Data berhasil dibuat' });
   } catch (error) {
-    res.status(500).json({ message: 'Error creating role', error });
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ message: 'Error creating role', error });
   }
 };
 
@@ -53,14 +61,16 @@ export const updateRole = async (req: Request, res: Response) => {
   const { role_name, permissionIds } = req.body;
 
   if (!role_name || !permissionIds.length) {
-    return sendError(res, 400, 'BAD REQUEST');
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, HTTP_MESSAGE.BAD_REQUEST);
   }
 
   try {
     // 1. cek role ada atau tidak
     const role = await Role.findByPk(id);
     if (!role) {
-      return res.status(404).json({ message: 'Role not found' });
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ message: HTTP_MESSAGE.NOT_FOUND });
     }
 
     // 2. update nama role (kalau ada)
@@ -74,8 +84,13 @@ export const updateRole = async (req: Request, res: Response) => {
       await (role as any).setPermissions(permissionIds); // <-- sync permission
     }
 
-    res.status(201).json({ message: 'Data berhasil dibuat' });
+    res.status(HTTP_STATUS.OK).json({ message: 'Data berhasil dibuat' });
   } catch (error) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      error
+    );
   }
 };

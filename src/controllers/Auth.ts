@@ -10,6 +10,7 @@ import {
 import argon2 from 'argon2';
 import { UserAttributes } from '../models/User';
 import { sendError } from '../utils/commons';
+import { HTTP_MESSAGE, HTTP_STATUS } from '../utils/constants';
 
 type UserWithRelations = UserAttributes & {
   scopes: Array<any>;
@@ -44,15 +45,21 @@ export const Login = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ message: 'User not found' });
     }
 
     const matchPassword = await argon2.verify(user.password, req.body.password);
     if (!matchPassword) {
-      return res.status(400).json({ message: 'Invalid Email or Password' });
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({ message: 'Invalid Email or Password' });
     }
     if (!user.is_active) {
-      return res.status(400).json({ message: 'User In Active' });
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({ message: 'User In Active' });
     }
 
     const JWT_SECRET = process.env.JWT_SECRET!;
@@ -82,9 +89,14 @@ export const Login = async (req: Request, res: Response) => {
 
     const token = jwt.sign(plainUser, JWT_SECRET);
 
-    res.status(200).json({ user_data: plainUser, token });
+    res.status(HTTP_STATUS.OK).json({ user_data: plainUser, token });
   } catch (error) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      error
+    );
   }
 };
 
@@ -93,7 +105,9 @@ export const getMe = async (req: Request, res: Response) => {
     const userId = (req as any).user_data?.id; // dari JWT middleware
 
     if (!userId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return res
+        .status(HTTP_STATUS.UNAUTHORIZED)
+        .json({ message: 'Unauthorized' });
     }
 
     const user = await UserModel.findByPk(userId, {
@@ -109,15 +123,22 @@ export const getMe = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User tidak ditemukan' });
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ message: 'User tidak ditemukan' });
     }
 
     const plainUser = user.get({ plain: true }) as UserWithRelations;
 
-    res.status(200).json({
+    res.status(HTTP_STATUS.OK).json({
       data: plainUser,
     });
   } catch (error) {
-    sendError(res, 500, 'INTERNAL SERVER ERROR', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
+      error
+    );
   }
 };

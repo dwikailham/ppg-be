@@ -1,9 +1,10 @@
 import { Response } from 'express';
+import { HTTP_MESSAGE, HTTP_STATUS } from './constants';
 
 export function sendError(
   res: Response,
-  status: number = 500,
-  message: string = 'INTERNAL SERVER ERROR',
+  status: number = HTTP_STATUS.INTERNAL_SERVER_ERROR,
+  message: string = HTTP_MESSAGE.INTERNAL_SERVER_ERROR,
   error?: any
 ) {
   return res.status(status).json({ message, error });
@@ -11,8 +12,8 @@ export function sendError(
 
 export function sendSuccess(
   res: Response,
-  message: string = 'Success',
+  message: string = HTTP_MESSAGE.OK,
   data?: any
 ) {
-  return res.status(200).json({ message, data });
+  return res.status(HTTP_STATUS.OK).json({ message, data });
 }
