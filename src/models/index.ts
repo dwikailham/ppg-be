@@ -8,6 +8,7 @@ import { RolePermission } from './RolePermission';
 import { UserRole } from './UserRole';
 import { UserScope } from './UserScope';
 import { Event } from './Event';
+import { EventSeries } from './EventSeries';
 
 // User <-> Role (many-to-many)
 UserModel.belongsToMany(Role, {
@@ -28,20 +29,28 @@ Permission.belongsToMany(Role, {
   foreignKey: 'permission_id',
 });
 
-// User <-> Scope (one-to-many)
+// User <-> Scope
 UserModel.hasMany(UserScope, { foreignKey: 'user_id', as: 'scopes' });
 UserScope.belongsTo(UserModel, { foreignKey: 'user_id' });
 
-// Desa → Kelompok
+// Desa <-> Kelompok
 DesaModel.hasMany(KelompokModel, { foreignKey: 'desa_id', as: 'kelompoks' });
 KelompokModel.belongsTo(DesaModel, { foreignKey: 'desa_id', as: 'desa' });
 
-// Kelompok → Student
+// Kelompok <-> Student
 KelompokModel.hasMany(StudentModel, { foreignKey: 'kelompok_id' });
 StudentModel.belongsTo(KelompokModel, {
   foreignKey: 'kelompok_id',
   as: 'kelompok',
 });
+
+// Event <-> EventSeries
+EventSeries.hasMany(Event, { as: 'events', foreignKey: 'series_id' });
+Event.belongsTo(EventSeries, { as: 'series', foreignKey: 'series_id' });
+
+// Event <-> User
+Event.belongsTo(UserModel, { as: 'creator', foreignKey: 'created_by' });
+UserModel.hasMany(Event, { foreignKey: 'created_by', as: 'createdEvents' });
 
 export {
   UserModel,
@@ -54,4 +63,5 @@ export {
   UserRole,
   UserScope,
   Event,
+  EventSeries,
 };

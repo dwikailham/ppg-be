@@ -5,9 +5,9 @@ import { ScopeType, SCOPE_TYPE } from '../utils/constants';
 
 export interface EventAttributes {
   id: number;
-  name: string;
-  date: Date;
-  location?: string;
+  series_id: number;
+  event_date: Date;
+  location?: string | null;
   scope_type: ScopeType;
   scope_id: number;
   created_by: number;
@@ -15,42 +15,60 @@ export interface EventAttributes {
   updatedAt?: Date;
 }
 
-export type EventCreationAttributes = Optional<EventAttributes, 'id'>;
+export interface EventCreationAttributes
+  extends Omit<EventAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
 
 export class Event
   extends Model<EventAttributes, EventCreationAttributes>
   implements EventAttributes
 {
-  declare id: number;
-  declare name: string;
-  declare date: Date;
-  declare location?: string;
-  declare scope_type: ScopeType;
-  declare scope_id: number;
-  declare created_by: number;
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
+  public id!: number;
+  public series_id!: number;
+  public event_date!: Date;
+  public location!: string | null;
+  public scope_type!: ScopeType;
+  public scope_id!: number;
+  public created_by!: number;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
 Event.init(
   {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    name: { type: DataTypes.STRING, allowNull: false },
-    date: { type: DataTypes.DATE, allowNull: false },
-    location: { type: DataTypes.STRING },
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    series_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: 'event_series', key: 'id' },
+    },
+    event_date: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     scope_type: {
       type: DataTypes.ENUM(SCOPE_TYPE.DESA, SCOPE_TYPE.KELOMPOK),
       allowNull: false,
     },
-    scope_id: { type: DataTypes.INTEGER, allowNull: false },
+    scope_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     created_by: { type: DataTypes.INTEGER, allowNull: false },
   },
-  { sequelize, tableName: 'events', modelName: 'Event' }
+  {
+    sequelize,
+    tableName: 'events',
+    timestamps: true,
+  }
 );
-
-// 🔗 Relasi ke User (pembuat event)
-Event.belongsTo(UserModel, { foreignKey: 'created_by', as: 'creator' });
-UserModel.hasMany(Event, { foreignKey: 'created_by', as: 'createdEvents' });
 
 // 🔗 Scope fleksibel
 Event.belongsTo(DesaModel, {
