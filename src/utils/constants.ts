@@ -31,5 +31,13 @@ export const SCOPE_FILTER_MIDDLEWARE = {
   DESA: 'DESA',
 } as const;
 
+export const STATUS_ATTENDANCE = {
+  HADIR: 'HADIR',
+  SAKIT: 'SAKIT',
+  IZIN: 'IZIN',
+  ALPHA: 'ALPHA',
+} as const;
+
 export type ScopeType = keyof typeof SCOPE_TYPE;
 export type ScopeFilterMiddleware = keyof typeof SCOPE_FILTER_MIDDLEWARE;
+export type StatusAttendance = keyof typeof STATUS_ATTENDANCE;

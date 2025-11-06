@@ -7,6 +7,7 @@ import { Role } from './Role';
 import { RolePermission } from './RolePermission';
 import { UserRole } from './UserRole';
 import { UserScope } from './UserScope';
+import { Event } from './Event';
 
 // User <-> Role (many-to-many)
 UserModel.belongsToMany(Role, {
@@ -52,4 +53,5 @@ export {
   RolePermission,
   UserRole,
   UserScope,
+  Event,
 };
