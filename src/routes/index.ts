@@ -7,3 +7,4 @@ export { default as PermissionRoute } from './Permission';
 export { default as RoleRoute } from './Role';
 export { default as ScopeRoute } from './Scope';
 export { default as EventRoute } from './Event';
+export { default as EventSeriesRoute } from './EventSeries';

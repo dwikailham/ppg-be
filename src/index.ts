@@ -12,6 +12,7 @@ import {
   RoleRoute,
   ScopeRoute,
   EventRoute,
+  EventSeriesRoute,
 } from './routes';
 
 dotenv.config();
@@ -45,6 +46,7 @@ app.use(PermissionRoute);
 app.use(RoleRoute);
 app.use(ScopeRoute);
 app.use(EventRoute);
+app.use(EventSeriesRoute);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello TypeScript + Express!');

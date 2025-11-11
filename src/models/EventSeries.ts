@@ -4,6 +4,8 @@ import sequelize from '../config/db';
 export interface EventSeriesAttributes {
   id: number;
   series_name: string;
+  start_date: Date;
+  end_date: Date;
   description?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -18,6 +20,8 @@ export class EventSeries
 {
   public id!: number;
   public series_name!: string;
+  public start_date!: Date;
+  public end_date!: Date;
   public description!: string | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -32,6 +36,14 @@ EventSeries.init(
     },
     series_name: {
       type: DataTypes.STRING,
+      allowNull: false,
+    },
+    start_date: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    end_date: {
+      type: DataTypes.DATE,
       allowNull: false,
     },
     description: {
