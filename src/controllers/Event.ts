@@ -1,8 +1,15 @@
 import { Request, Response } from 'express';
-import { Event, DesaModel, KelompokModel, EventSeries } from '../models';
+import {
+  Event,
+  DesaModel,
+  KelompokModel,
+  EventSeries,
+  UserModel,
+} from '../models';
 import { sendError, sendSuccess } from '../utils/commons';
 import { UserWithRelations } from './Auth';
 import { HTTP_MESSAGE, HTTP_STATUS, SCOPE_TYPE } from '../utils/constants';
+import User from '../models/User';
 
 interface ValidationRequest extends Request {
   user_data: UserWithRelations;
@@ -55,14 +62,28 @@ export const getEvents = async (req: Request, res: Response) => {
 
     const { rows, count } = await Event.findAndCountAll({
       include: [
-        { model: EventSeries, as: 'series' },
+        {
+          model: EventSeries,
+          as: 'series',
+          attributes: ['id', 'series_name', 'description'],
+        },
         user.scopes[0].scoped_entity_type === SCOPE_TYPE.DESA
-          ? { model: DesaModel, as: 'desa' }
-          : { model: KelompokModel, as: 'kelompok' },
+          ? { model: DesaModel, as: 'desa', attributes: ['id', 'name'] }
+          : {
+              model: KelompokModel,
+              as: 'kelompok',
+              attributes: ['id', 'name'],
+            },
+        {
+          model: UserModel,
+          as: 'creator',
+          attributes: ['id', 'name', 'username'],
+        },
       ],
       limit: Number(limit),
       offset,
       order: [['event_date', 'DESC']],
+      attributes: ['id', 'event_date', 'location'],
     });
 
     res.status(HTTP_STATUS.OK).json({

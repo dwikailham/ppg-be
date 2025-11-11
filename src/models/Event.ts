@@ -75,12 +75,10 @@ Event.belongsTo(DesaModel, {
   foreignKey: 'scope_id',
   constraints: false,
   as: 'desa',
-  scope: { scope_type: SCOPE_TYPE.DESA },
 });
 
 Event.belongsTo(KelompokModel, {
   foreignKey: 'scope_id',
   constraints: false,
   as: 'kelompok',
-  scope: { scope_type: SCOPE_TYPE.KELOMPOK },
 });
