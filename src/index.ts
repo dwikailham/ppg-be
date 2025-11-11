@@ -11,6 +11,9 @@ import {
   PermissionRoute,
   RoleRoute,
   ScopeRoute,
+  EventRoute,
+  EventSeriesRoute,
+  Attendance,
 } from './routes';
 
 dotenv.config();
@@ -43,6 +46,9 @@ app.use(StudentRoute);
 app.use(PermissionRoute);
 app.use(RoleRoute);
 app.use(ScopeRoute);
+app.use(EventRoute);
+app.use(EventSeriesRoute);
+app.use(Attendance);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello TypeScript + Express!');
