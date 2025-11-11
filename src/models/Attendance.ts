@@ -1,6 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/db';
-import { UserModel, Event, StudentModel } from './index';
 import { STATUS_ATTENDANCE, StatusAttendance } from '../utils/constants';
 
 export interface AttendanceAttributes {
