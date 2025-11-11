@@ -23,12 +23,11 @@ export const getAttendances = async (req: Request, res: Response) => {
     const { count, rows } = await Attendance.findAndCountAll({
       where,
       include: [
-        { model: Event, as: 'event', attributes: ['id', 'title', 'date'] },
-        { model: StudentModel, as: 'student', attributes: ['id', 'name'] },
+        { model: Event, as: 'event' },
+        { model: StudentModel, as: 'student' },
         {
           model: UserModel,
           as: 'checker',
-          attributes: ['id', 'name', 'email'],
         },
       ],
       offset,
@@ -63,9 +62,9 @@ export const getAttendanceDetail = async (req: Request, res: Response) => {
 
     const attendance = await Attendance.findByPk(id, {
       include: [
-        { model: Event, as: 'event', attributes: ['id', 'title', 'date'] },
-        { model: StudentModel, as: 'student', attributes: ['id', 'name'] },
-        { model: UserModel, as: 'checker', attributes: ['id', 'name'] },
+        { model: Event, as: 'event' },
+        { model: StudentModel, as: 'student' },
+        { model: UserModel, as: 'checker' },
       ],
     });
 
