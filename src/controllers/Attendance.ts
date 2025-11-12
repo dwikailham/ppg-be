@@ -6,6 +6,11 @@ import {
   HTTP_MESSAGE,
 } from '../utils/constants';
 import { sendError } from '../utils/commons';
+import { UserWithRelations } from './Auth';
+
+interface ValidationRequest extends Request {
+  user_data: UserWithRelations;
+}
 
 // =======================
 // GET: List Attendance
@@ -23,11 +28,12 @@ export const getAttendances = async (req: Request, res: Response) => {
     const { count, rows } = await Attendance.findAndCountAll({
       where,
       include: [
-        { model: Event, as: 'event' },
-        { model: StudentModel, as: 'student' },
+        { model: Event, as: 'event', attributes: ['id', 'series_id'] },
+        { model: StudentModel, as: 'student', attributes: ['id', 'name'] },
         {
           model: UserModel,
           as: 'checker',
+          attributes: ['id', 'name'],
         },
       ],
       offset,
@@ -234,11 +240,21 @@ export const bulkCreateAttendance = async (req: Request, res: Response) => {
 };
 
 export const createOrUpdateAttendance = async (req: Request, res: Response) => {
+  const validationRequest = req as ValidationRequest;
+  const user = validationRequest.user_data;
   try {
-    const { event_id, student_id, status, notes, checked_by } = req.body;
+    const { event_id, student_id, status, notes } = req.body;
 
-    if (!event_id || !student_id || !status || !checked_by) {
+    if (!event_id || !student_id || !status) {
       return sendError(res, HTTP_STATUS.BAD_REQUEST, 'Missing required fields');
+    }
+
+    if (!Object.values(STATUS_ATTENDANCE).includes(status)) {
+      return sendError(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        'Invalid attendance status'
+      );
     }
 
     // cari apakah sudah ada absensi utk event + student ini
@@ -248,14 +264,14 @@ export const createOrUpdateAttendance = async (req: Request, res: Response) => {
 
     if (existing) {
       // update status + notes + waktu pemeriksaan
-      await existing.update({
+      await existing?.update({
         status,
-        notes: notes || existing.notes,
-        checked_by,
+        notes: notes || existing?.notes,
+        checked_by: user?.id || 0,
         checked_at: new Date(),
       });
 
-      return res.status(200).json({
+      return res.status(HTTP_STATUS.OK).json({
         success: true,
         message: 'Attendance updated successfully',
         data: existing,
@@ -267,11 +283,11 @@ export const createOrUpdateAttendance = async (req: Request, res: Response) => {
         student_id,
         status,
         notes: notes || null,
-        checked_by,
+        checked_by: user?.id || 0,
         checked_at: new Date(),
       });
 
-      return res.status(201).json({
+      return res.status(HTTP_STATUS.CREATED).json({
         success: true,
         message: 'Attendance created successfully',
         data: newAttendance,
